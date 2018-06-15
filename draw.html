@@ -1,0 +1,115 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<script type="text/javascript" src="js/jquery-1.12.4.js"></script>
+<script type="text/javascript" src="js/jcanvas.js"></script>
+<script type="text/javascript" src="js/jquery.easyui.min.js"></script>
+<script type="text/javascript" src="js/easyui-lang-zh_TW.js"></script>
+
+</head>
+<body>
+    <div>
+        <canvas id="myCanvas" width="500" height="400"  style="border:1px solid #000000;"/>
+    </div>
+    <div>
+        <canvas id="myCanvas2" width="500" height="400" style="border:1px solid #000000;"/>
+    </div>
+    <button onclick="out()">輸出</button>
+</body>
+</html>
+<script type="text/javascript">
+
+    function out(){
+        var canvas = document.getElementById("myCanvas");
+        var dataURL = canvas.toDataURL();
+        console.log(dataURL);
+    }
+
+    var isMouseDown = false;
+  var pos = {
+    x: 0,
+    y: 0
+  };
+  var lastPos = {
+    x: 0,
+    y: 0
+  };
+  /*
+    var canvas = document.getElementById("myCanvas");
+    var context = canvas.getContext('2d');
+    context.fillStyle = 'rgba(255, 255, 255, 0)';
+*/
+
+    var $myCanvas = $('#myCanvas');
+    var $myCanvas2 = $('#myCanvas2');
+    var $offset = $myCanvas.offset();
+
+    /*
+    $('#myCanvas').addLayer({
+      type: 'rectangle',
+      fillStyle: '#585',
+      x: 100, y: 100,
+      width: 100, height: 50
+    })
+    .drawLayers();*/
+
+    $myCanvas2.drawRect({
+
+          strokeStyle: 'blue',
+          strokeWidth: 4,
+          x: 150, y: 100,
+          fromCenter: false,
+          width: 200,
+          height: 100
+        });
+
+    function paintLine(x1, y1, x2, y2, paintWidth, paintColor) {
+    $myCanvas.drawLine({
+      strokeStyle: paintColor,
+      strokeWidth: paintWidth,
+      rounded: true,
+      strokeJoin: 'round',
+      strokeCap: 'round',
+      x1: x1,
+      y1: y1,
+      x2: x2,
+      y2: y2
+    });
+  }
+
+  //On mousedown the painting functionality kicks in
+  $myCanvas.on('mousedown', function(e) {
+    isMouseDown = true;
+  });
+
+  //On mouseup the painting functionality stops
+  $myCanvas.on('mouseup', function() {
+    isMouseDown = false;
+    return;
+  });
+
+  //On mousemove store the mouse coordinates and
+  //use jCanvas drawLine() method
+  $myCanvas.on('mousemove', function(e) {
+
+    lastPos.x = pos.x;
+    lastPos.y = pos.y;
+    pos.x = e.pageX - $offset.left;
+    pos.y = e.pageY - $offset.top;
+
+    if (isMouseDown) {
+
+      paintLine(lastPos.x, lastPos.y, pos.x, pos.y, 10, 'red');
+
+    }
+  });
+
+</script>
+<style>
+canvas {
+    /**
+     * Set transparent to let any other canvases render through
+     */
+    background-color: transparent;
+}
+</style>
