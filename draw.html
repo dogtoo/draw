@@ -5,105 +5,287 @@
 <script type="text/javascript" src="js/jcanvas.js"></script>
 <script type="text/javascript" src="js/jquery.easyui.min.js"></script>
 <script type="text/javascript" src="js/easyui-lang-zh_TW.js"></script>
-
+<style>
+    #P2{
+        position:absolute;
+        top:11px;
+        left:95px;
+    }
+</style>
 </head>
 <body>
-    <div>
-        <canvas id="myCanvas" width="500" height="400"  style="border:1px solid #000000;"/>
-    </div>
-    <div>
-        <canvas id="myCanvas2" width="500" height="400" style="border:1px solid #000000;"/>
-    </div>
-    <button onclick="out()">輸出</button>
+    <table>
+        <tr>
+            <td width="80">
+                <table style="border:1px #cccccc solid;" cellpadding="1" border='1'>
+                    <tr>
+                        <td>
+                            <div id="red" style="background-color:#FF0000;width:30px;height:30px" onclick="paintColor=this.style.backgroundColor"></div>
+                        </td>
+                        <td>
+                            <div id="yellow" style="background-color:#FFFF00;width:30px;height:30px" onclick="paintColor=this.style.backgroundColor"></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div id="mediumblue" style="background-color:#0000CD;width:30px;height:30px" onclick="paintColor=this.style.backgroundColor"></div>
+                        </td>
+                        <td>
+                            <div id="black" style="background-color:#000000;width:30px;height:30px" onclick="paintColor=this.style.backgroundColor"></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" align="center">
+                            <div id="circle3" style="width:60px;height:13px;" onclick="paintWidth=this.id.match(/\d+/)">
+                                <div style="background-color:#000000;width:3px;height:3px;border-radius:999em;"></div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" align="center">
+                            <div id="circle6" style="width:60px;height:13px;" onclick="paintWidth=this.id.match(/\d+/)">
+                                <div style="background-color:#000000;width:6px;height:6px;border-radius:999em;"></div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" align="center">
+                            <div id="circle9" style="width:60px;height:13px;" onclick="paintWidth=this.id.match(/\d+/)">
+                                <div style="background-color:#000000;width:9px;height:9px;border-radius:999em;"></div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" align="center">
+                            <button onclick="out()">輸出</button>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+            <td>
+                <div id="P1">
+                    <canvas id="myCanvas2" width="800" height="400" style="border:1px solid #000000;"></canvas>
+
+                </div>
+                <div id="P2">
+                    <canvas id="myCanvas"  width="800" height="400"  style="border:1px solid #000000;"/>
+                </div>
+            </td>
+        </tr>
+
+    </table>
 </body>
 </html>
 <script type="text/javascript">
-
-    function out(){
-        var canvas = document.getElementById("myCanvas");
-        var dataURL = canvas.toDataURL();
-        console.log(dataURL);
-    }
-
     var isMouseDown = false;
-  var pos = {
-    x: 0,
-    y: 0
-  };
-  var lastPos = {
-    x: 0,
-    y: 0
-  };
-  /*
-    var canvas = document.getElementById("myCanvas");
-    var context = canvas.getContext('2d');
-    context.fillStyle = 'rgba(255, 255, 255, 0)';
-*/
+    var pos = {
+        x: 0,
+        y: 0
+    };
+    var lastPos = {
+        x: 0,
+        y: 0
+    };
+    var paintWidth = 3;
+    var paintColor = '#FF0000';
 
+    alert("P1 top = " + $("#P1").position().top + ", left = " + $("#P1").position().left);
     var $myCanvas = $('#myCanvas');
     var $myCanvas2 = $('#myCanvas2');
     var $offset = $myCanvas.offset();
 
-    /*
-    $('#myCanvas').addLayer({
-      type: 'rectangle',
-      fillStyle: '#585',
-      x: 100, y: 100,
-      width: 100, height: 50
-    })
-    .drawLayers();*/
+    var itemDesc = "The value for the fontSize property accepts two different types of values. If you specify the value as a plain number (e.g. 48), the font size is interpreted in pixels."
+    var iDescFontSize = 20;
+    //文字內距
+    var wordPadding = {
+        top: 10,
+        right: 10,
+        bottom: 10,
+        left: 10
+    };
+    //itemDesc長度
+    var iDescW = 400;
+    //計算文字高度
 
-    $myCanvas2.drawRect({
+    //表格基點
+    var baseX = 30;
+    var baseY = 100;
+    //表格高度
+    var baseH = 80;
 
-          strokeStyle: 'blue',
-          strokeWidth: 4,
-          x: 150, y: 100,
-          fromCenter: false,
-          width: 200,
-          height: 100
+    //答案選項長度
+    var optW = 80;
+    var optCnt = 3; //級分數量
+
+    //文字畫點
+    var wordPointX = 0;
+    var wordPointY = 0;
+
+
+    for (var item = 0; item < 2; item++)
+    {
+        //畫點
+        var drawPointX = baseX;
+        var drawPointY;
+        var diffH;
+        if (item == 0)
+            drawPointY = baseY;
+        else
+            drawPointY += baseH + diffH;
+
+        diffH = 0;
+
+        //項目文字
+        var iDescParams =
+        $myCanvas2.measureText({
+            fillStyle: '#000',
+            //strokeStyle: '#25a',
+            strokeWidth: 1,
+            x: drawPointX + wordPadding.top, y: drawPointY + wordPadding.left,
+            fontSize: iDescFontSize,
+            fontFamily: 'Trebuchet MS, sans-serif',
+            maxWidth: iDescW - wordPadding.left - wordPadding.right,
+            fromCenter: false,
+            align: 'left',
+            text: itemDesc
+        });
+        $myCanvas2.drawText({
+            fillStyle: '#000',
+            //strokeStyle: '#25a',
+            strokeWidth: 1,
+            x: drawPointX + wordPadding.top, y: drawPointY + wordPadding.left,
+            fontSize: iDescFontSize,
+            fontFamily: 'Trebuchet MS, sans-serif',
+            maxWidth: iDescW - wordPadding.left - wordPadding.right,
+            fromCenter: false,
+            align: 'left',
+            text: itemDesc
         });
 
-    function paintLine(x1, y1, x2, y2, paintWidth, paintColor) {
-    $myCanvas.drawLine({
-      strokeStyle: paintColor,
-      strokeWidth: paintWidth,
-      rounded: true,
-      strokeJoin: 'round',
-      strokeCap: 'round',
-      x1: x1,
-      y1: y1,
-      x2: x2,
-      y2: y2
-    });
-  }
+        if (iDescParams.height + wordPadding.top + wordPadding.bottom > baseH)
+            diffH = iDescParams.height + wordPadding.top + wordPadding.bottom - baseH;
 
-  //On mousedown the painting functionality kicks in
-  $myCanvas.on('mousedown', function(e) {
-    isMouseDown = true;
-  });
+        $myCanvas2.drawRect({
+            strokeStyle: 'black',
+            strokeWidth: 1,
+            x: drawPointX, y: drawPointY,
+            fromCenter: false,
+            width: iDescW,
+            height: baseH + diffH
+        });
 
-  //On mouseup the painting functionality stops
-  $myCanvas.on('mouseup', function() {
-    isMouseDown = false;
-    return;
-  });
-
-  //On mousemove store the mouse coordinates and
-  //use jCanvas drawLine() method
-  $myCanvas.on('mousemove', function(e) {
-
-    lastPos.x = pos.x;
-    lastPos.y = pos.y;
-    pos.x = e.pageX - $offset.left;
-    pos.y = e.pageY - $offset.top;
-
-    if (isMouseDown) {
-
-      paintLine(lastPos.x, lastPos.y, pos.x, pos.y, 10, 'red');
+        drawPointX += iDescW;
+        for (var cnt = 0; cnt < optCnt; cnt++)
+        {
+            $myCanvas2.drawRect({
+                strokeStyle: 'black',
+                strokeWidth: 1,
+                x: drawPointX, y: drawPointY,
+                fromCenter: false,
+                width: optW,
+                height: baseH + diffH
+            });
+            drawPointX += optW;
+        }
 
     }
-  });
+/*
+    $myCanvas2.drawRect({
+        strokeStyle: 'black',
+        strokeWidth: 1,
+        x: baseX, y: baseY,
+        fromCenter: false,
+        width: 400,
+        height: 80
+    }).drawRect({
+        strokeStyle: 'black',
+        strokeWidth: 1,
+        x: 30 + 400, y: 100,
+        fromCenter: false,
+        width: 80,
+        height: 80
+    }).drawRect({
+        strokeStyle: 'black',
+        strokeWidth: 1,
+        x: 30 + 80 + 400, y: 100,
+        fromCenter: false,
+        width: 80,
+        height: 80
+    }).drawRect({
+        strokeStyle: 'black',
+        strokeWidth: 1,
+        x: 30 + 80 + 80 + 400, y: 100,
+        fromCenter: false,
+        width: 80,
+        height: 80
+    });
 
+    $myCanvas2.drawRect({
+        strokeStyle: 'black',
+        strokeWidth: 1,
+        x: 30, y: 100 + 80,
+        fromCenter: false,
+        width: 400,
+        height: 80
+    }).drawRect({
+        strokeStyle: 'black',
+        strokeWidth: 1,
+        x: 30 + 400, y: 100 + 80,
+        fromCenter: false,
+        width: 80,
+        height: 80
+    }).drawRect({
+        strokeStyle: 'black',
+        strokeWidth: 1,
+        x: 30 + 80 + 400, y: 100 + 80,
+        fromCenter: false,
+        width: 80,
+        height: 80
+    }).drawRect({
+        strokeStyle: 'black',
+        strokeWidth: 1,
+        x: 30 + 80 + 80 + 400, y: 100 + 80,
+        fromCenter: false,
+        width: 80,
+        height: 80
+    });
+*/
+    function paintLine(x1, y1, x2, y2) {
+        $myCanvas.drawLine({
+            strokeStyle: paintColor,
+            strokeWidth: paintWidth,
+            rounded: true,
+            strokeJoin: 'round',
+            strokeCap: 'round',
+            x1: x1,
+            y1: y1,
+            x2: x2,
+            y2: y2
+        });
+    }
+
+    //On mousedown the painting functionality kicks in
+    $myCanvas.on('mousedown', function(e) {
+        isMouseDown = true;
+    });
+
+    //On mouseup the painting functionality stops
+    $myCanvas.on('mouseup', function() {
+        isMouseDown = false;
+        return;
+    });
+
+    //On mousemove store the mouse coordinates and
+    //use jCanvas drawLine() method
+    $myCanvas.on('mousemove', function(e) {
+        lastPos.x = pos.x;
+        lastPos.y = pos.y;
+        pos.x = e.pageX - $offset.left;
+        pos.y = e.pageY - $offset.top;
+        if (isMouseDown) {
+          paintLine(lastPos.x, lastPos.y, pos.x, pos.y);
+        }
+    });
 </script>
 <style>
 canvas {
