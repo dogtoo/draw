@@ -3583,14 +3583,47 @@ function _wrapText(ctx, params) {
 		allLines = [],
 		// Other variables
 		lines, line, l,
-		text, words, w;
+		text, words = [], w, t;
 
 	// Loop through manually-broken lines
 	for (l = 0; l < manualLines.length; l += 1) {
 
 		text = manualLines[l];
-		// Split line into list of words
-		words = text.split(' ');
+		// 中文的一個字跟英文的one word表達方式不太同
+        // Split line into list of words
+		//words = text.split(' ');
+        var tt = 0;
+        var engW = '';
+        for (t = 0; t < text.length; t += 1) {
+            
+            var st = text.substr(t, 1);
+            var test = st.search(/[\u4e00-\u9fa5]/);
+            var test2 = st.search(/[a-zA-Z0-9]/);
+            
+            
+            if (engW != '' && st.search(/[a-zA-Z0-9]/) === -1) {
+                words[tt] = engW;
+                tt++;
+                engW = '';
+            }
+            
+            if (st.search(/[\u4e00-\u9fa5]/) === 0) {
+                words[tt] = st; 
+                tt++;
+            }
+            else if (st.search(/[a-zA-Z0-9]/) === 0) {
+                engW += st;
+            }
+            else if (st.search(/\s/) === 0) {
+                words[tt] = st;
+                tt++;
+            }    
+            else {
+                words[tt] = st; //符號會落到這
+                tt++;
+            }
+        }
+        //words = text.match(/[\u4e00-\u9fa5_a-zA-Z0-9]/g);
 		lines = [];
 		line = '';
 
@@ -3619,7 +3652,7 @@ function _wrapText(ctx, params) {
 				line += words[w];
 				// Do not add a space after the last word
 				if (w !== (words.length - 1)) {
-					line += ' ';
+					//line += ' ';
 				}
 			}
 			// The last word should always be pushed
