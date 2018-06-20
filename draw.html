@@ -57,6 +57,19 @@
                     </tr>
                     <tr>
                         <td colspan="2" align="center">
+                            <div>
+                                <img src="css/icons/mouse-pointer.png" onclick="paintType='cursor'"/>
+                            </div>
+                            <div>
+                                <img src="css/icons/edit.png" onclick="paintType='pen'"/>
+                            </div>
+                            <div>
+                                <img src="css/icons/eraser.png" onclick="paintType='eraser'"/>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" align="center">
                             <button onclick="out()">輸出</button>
                         </td>
                     </tr>
@@ -86,15 +99,16 @@
         x: 0,
         y: 0
     };
-    var paintWidth = 3;
-    var paintColor = '#FF0000';
+    var paintWidth = 30; //預設畫筆寬度
+    var paintColor = '#FF0000'; //預設畫筆顏色
+    var paintType = 'pen'; //預設游標 eraser pen
 
     alert("P1 top = " + $("#P1").position().top + ", left = " + $("#P1").position().left);
     var $myCanvas = $('#myCanvas');
     var $myCanvas2 = $('#myCanvas2');
     var $offset = $myCanvas.offset();
 
-    var itemDesc = "The value for the fontSize property accepts two different types of values. If you specify the value as a plain number (e.g. 48), the font size is interpreted in pixels."
+    var itemDesc = "繼上週簽下新秀巴格利（Marvin Bagley III），彪馬（Puma）再次簽下19歲的美國大專男子錦標賽（NCAA）\n一級名校新秀艾頓（DeAndre Ayton）為彪馬代言，雙方同意4年合約，據悉金額上看台幣上億，近期推出2雙彪馬專屬籃球鞋。"
     var iDescFontSize = 20;
     //文字內距
     var wordPadding = {
@@ -136,10 +150,8 @@
         diffH = 0;
 
         //項目文字
-        var iDescParams =
-        $myCanvas2.measureText({
+        var param = {
             fillStyle: '#000',
-            //strokeStyle: '#25a',
             strokeWidth: 1,
             x: drawPointX + wordPadding.top, y: drawPointY + wordPadding.left,
             fontSize: iDescFontSize,
@@ -148,19 +160,10 @@
             fromCenter: false,
             align: 'left',
             text: itemDesc
-        });
-        $myCanvas2.drawText({
-            fillStyle: '#000',
-            //strokeStyle: '#25a',
-            strokeWidth: 1,
-            x: drawPointX + wordPadding.top, y: drawPointY + wordPadding.left,
-            fontSize: iDescFontSize,
-            fontFamily: 'Trebuchet MS, sans-serif',
-            maxWidth: iDescW - wordPadding.left - wordPadding.right,
-            fromCenter: false,
-            align: 'left',
-            text: itemDesc
-        });
+        };
+
+        var iDescParams = $myCanvas2.measureText(param);
+        $myCanvas2.drawText(param);
 
         if (iDescParams.height + wordPadding.top + wordPadding.bottom > baseH)
             diffH = iDescParams.height + wordPadding.top + wordPadding.bottom - baseH;
@@ -189,67 +192,39 @@
         }
 
     }
-/*
-    $myCanvas2.drawRect({
-        strokeStyle: 'black',
-        strokeWidth: 1,
-        x: baseX, y: baseY,
-        fromCenter: false,
-        width: 400,
-        height: 80
-    }).drawRect({
-        strokeStyle: 'black',
-        strokeWidth: 1,
-        x: 30 + 400, y: 100,
-        fromCenter: false,
-        width: 80,
-        height: 80
-    }).drawRect({
-        strokeStyle: 'black',
-        strokeWidth: 1,
-        x: 30 + 80 + 400, y: 100,
-        fromCenter: false,
-        width: 80,
-        height: 80
-    }).drawRect({
-        strokeStyle: 'black',
-        strokeWidth: 1,
-        x: 30 + 80 + 80 + 400, y: 100,
-        fromCenter: false,
-        width: 80,
-        height: 80
-    });
 
-    $myCanvas2.drawRect({
-        strokeStyle: 'black',
-        strokeWidth: 1,
-        x: 30, y: 100 + 80,
-        fromCenter: false,
-        width: 400,
-        height: 80
-    }).drawRect({
-        strokeStyle: 'black',
-        strokeWidth: 1,
-        x: 30 + 400, y: 100 + 80,
-        fromCenter: false,
-        width: 80,
-        height: 80
-    }).drawRect({
-        strokeStyle: 'black',
-        strokeWidth: 1,
-        x: 30 + 80 + 400, y: 100 + 80,
-        fromCenter: false,
-        width: 80,
-        height: 80
-    }).drawRect({
-        strokeStyle: 'black',
-        strokeWidth: 1,
-        x: 30 + 80 + 80 + 400, y: 100 + 80,
-        fromCenter: false,
-        width: 80,
-        height: 80
-    });
+    function clearLine(x1, y1, x2, y2) {
+/*
+        $myCanvas.clearCanvas({
+            x: x1, y: y1,
+            radius: 10
+        });
 */
+        var asin = 10*Math.sin(Math.atan((y2-y1)/(x2-x1)));
+        var acos = 10*Math.cos(Math.atan((y2-y1)/(x2-x1)))
+        var x3 = x1+asin;
+        var y3 = y1-acos;
+        var x4 = x1-asin;
+        var y4 = y1+acos;
+        var x5 = x2+asin;
+        var y5 = y2-acos;
+        var x6 = x2-asin;
+        var y6 = y2+acos;
+/*
+        $myCanvas.clearCanvas({
+            x: x2, y: y2,
+            radius: 10
+        });
+*/
+        $myCanvas.clearCanvas({
+            x3: 300, y3: 150,
+            x4: 350, y4: 150,
+            x5: 300, y5: 200,
+            x6: 350, y6: 200,
+            radius: 10
+        });
+    }
+
     function paintLine(x1, y1, x2, y2) {
         $myCanvas.drawLine({
             strokeStyle: paintColor,
@@ -283,7 +258,10 @@
         pos.x = e.pageX - $offset.left;
         pos.y = e.pageY - $offset.top;
         if (isMouseDown) {
-          paintLine(lastPos.x, lastPos.y, pos.x, pos.y);
+            if (paintType === 'pen')
+                paintLine(lastPos.x, lastPos.y, pos.x, pos.y);
+            else if (paintType === 'eraser')
+                clearLine(lastPos.x, lastPos.y, pos.x, pos.y);
         }
     });
 </script>

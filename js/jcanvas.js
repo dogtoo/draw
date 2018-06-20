@@ -424,6 +424,24 @@ function _transformShape(canvas, ctx, params, width, height) {
 	if (params.translate || params.translateX || params.translateY) {
 		_translateCanvas(ctx, params, null);
 	}
+    // clear by arc
+    if (params.radius > 0) {
+        ctx.beginPath()
+        ctx.arc(params.x,params.y,params.radius,params.start,2*Math.PI);
+        ctx.clip()
+    }
+
+    // clear by line
+    if (params.x3 + params.y3 + params.x4 + params.y4
+      + params.x5 + params.y5 + params.x6 + params.y6 > 0 && params.radius > 0) {
+        ctx.beginPath()
+        ctx.moveTo(params.x3,params.y3);
+        ctx.lineTo(params.x5,params.y5);
+        ctx.lineTo(params.x6,params.y6);
+        ctx.lineTo(params.x4,params.y4);
+        ctx.closePath();
+        ctx.clip();
+    }
 
 }
 
@@ -2486,11 +2504,20 @@ $.fn.clearCanvas = function clearCanvas(args) {
 			if (params.width === null || params.height === null) {
 				// Clear entire canvas if width/height is not given
 
-				// Reset current transformation temporarily to ensure that the entire canvas is cleared
-				ctx.save();
-				ctx.setTransform(1, 0, 0, 1, 0, 0);
-				ctx.clearRect(0, 0, $canvases[e].width, $canvases[e].height);
-				ctx.restore();
+                if (params.radius > 0) {
+                    // Transform clear rectangle
+    				_addLayer($canvases[e], params, args, clearCanvas);
+    				_transformShape($canvases[e], ctx, params, params.width, params.height);
+    				ctx.clearRect(0, 0, $canvases[e].width, $canvases[e].height);
+    				// Restore previous transformation
+    				_restoreTransform(ctx, params);
+                } else {
+    				// Reset current transformation temporarily to ensure that the entire canvas is cleared
+    				ctx.save();
+    				ctx.setTransform(1, 0, 0, 1, 0, 0);
+    				ctx.clearRect(0, 0, $canvases[e].width, $canvases[e].height);
+    				ctx.restore();
+    			}
 
 			} else {
 				// Otherwise, clear the defined section of the canvas
@@ -3595,20 +3622,20 @@ function _wrapText(ctx, params) {
         var tt = 0;
         var engW = '';
         for (t = 0; t < text.length; t += 1) {
-            
+
             var st = text.substr(t, 1);
             var test = st.search(/[\u4e00-\u9fa5]/);
             var test2 = st.search(/[a-zA-Z0-9]/);
-            
-            
+
+
             if (engW != '' && st.search(/[a-zA-Z0-9]/) === -1) {
                 words[tt] = engW;
                 tt++;
                 engW = '';
             }
-            
+
             if (st.search(/[\u4e00-\u9fa5]/) === 0) {
-                words[tt] = st; 
+                words[tt] = st;
                 tt++;
             }
             else if (st.search(/[a-zA-Z0-9]/) === 0) {
@@ -3617,7 +3644,7 @@ function _wrapText(ctx, params) {
             else if (st.search(/\s/) === 0) {
                 words[tt] = st;
                 tt++;
-            }    
+            }
             else {
                 words[tt] = st; //符號會落到這
                 tt++;
