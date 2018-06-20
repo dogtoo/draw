@@ -424,25 +424,6 @@ function _transformShape(canvas, ctx, params, width, height) {
 	if (params.translate || params.translateX || params.translateY) {
 		_translateCanvas(ctx, params, null);
 	}
-    // clear by arc
-    if (params.radius > 0) {
-        ctx.beginPath()
-        ctx.arc(params.x,params.y,params.radius,params.start,2*Math.PI);
-        ctx.clip()
-    }
-
-    // clear by line
-    if (params.x3 + params.y3 + params.x4 + params.y4
-      + params.x5 + params.y5 + params.x6 + params.y6 > 0 && params.radius > 0) {
-        ctx.beginPath()
-        ctx.moveTo(params.x3,params.y3);
-        ctx.lineTo(params.x5,params.y5);
-        ctx.lineTo(params.x6,params.y6);
-        ctx.lineTo(params.x4,params.y4);
-        ctx.closePath();
-        ctx.clip();
-    }
-
 }
 
 /* Plugin API */
@@ -2501,24 +2482,31 @@ $.fn.clearCanvas = function clearCanvas(args) {
 		ctx = _getContext($canvases[e]);
 		if (ctx) {
 
-			if (params.width === null || params.height === null) {
+            if (params.radius > 0 && params.x > 0 && params.y > 0) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(params.x,params.y,params.radius,params.start,2*Math.PI);
+                ctx.clip();
+    			ctx.clearRect(0, 0, $canvases[e].width, $canvases[e].height);
+    			ctx.restore();
+            } else if (params.x3 + params.y3 + params.x4 + params.y4 + params.x5 + params.y5 + params.x6 + params.y6 > 0) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.moveTo(params.x3,params.y3);
+                ctx.lineTo(params.x5,params.y5);
+                ctx.lineTo(params.x6,params.y6);
+                ctx.lineTo(params.x4,params.y4);
+                ctx.clip();
+                ctx.clearRect(0, 0, $canvases[e].width, $canvases[e].height);
+    			ctx.restore();
+			} else if (params.width === null || params.height === null) {
 				// Clear entire canvas if width/height is not given
 
-                if (params.radius > 0) {
-                    // Transform clear rectangle
-    				_addLayer($canvases[e], params, args, clearCanvas);
-    				_transformShape($canvases[e], ctx, params, params.width, params.height);
-    				ctx.clearRect(0, 0, $canvases[e].width, $canvases[e].height);
-    				// Restore previous transformation
-    				_restoreTransform(ctx, params);
-                } else {
-    				// Reset current transformation temporarily to ensure that the entire canvas is cleared
-    				ctx.save();
-    				ctx.setTransform(1, 0, 0, 1, 0, 0);
-    				ctx.clearRect(0, 0, $canvases[e].width, $canvases[e].height);
-    				ctx.restore();
-    			}
-
+    			// Reset current transformation temporarily to ensure that the entire canvas is cleared
+    			ctx.save();
+    			ctx.setTransform(1, 0, 0, 1, 0, 0);
+    			ctx.clearRect(0, 0, $canvases[e].width, $canvases[e].height);
+    			ctx.restore();
 			} else {
 				// Otherwise, clear the defined section of the canvas
 

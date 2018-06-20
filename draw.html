@@ -9,14 +9,14 @@
     #P2{
         position:absolute;
         top:11px;
-        left:95px;
+        left:115px;
     }
 </style>
 </head>
 <body>
     <table>
         <tr>
-            <td width="80">
+            <td width="100">
                 <table style="border:1px #cccccc solid;" cellpadding="1" border='1'>
                     <tr>
                         <td>
@@ -73,6 +73,14 @@
                             <button onclick="out()">輸出</button>
                         </td>
                     </tr>
+                    
+                    <tr>
+                        <td colspan="2" align="center">
+                            <input type="input" id="xy1" style="width:90px"/>
+                            <input type="input" id="xy2" style="width:90px"/>
+                        </td>
+                    </tr>
+                    
                 </table>
             </td>
             <td>
@@ -90,6 +98,7 @@
 </body>
 </html>
 <script type="text/javascript">
+
     var isMouseDown = false;
     var pos = {
         x: 0,
@@ -99,7 +108,7 @@
         x: 0,
         y: 0
     };
-    var paintWidth = 30; //預設畫筆寬度
+    var paintWidth = 3; //預設畫筆寬度
     var paintColor = '#FF0000'; //預設畫筆顏色
     var paintType = 'pen'; //預設游標 eraser pen
 
@@ -119,7 +128,6 @@
     };
     //itemDesc長度
     var iDescW = 400;
-    //計算文字高度
 
     //表格基點
     var baseX = 30;
@@ -194,14 +202,15 @@
     }
 
     function clearLine(x1, y1, x2, y2) {
-/*
+        var radius = paintWidth / 2;
+
         $myCanvas.clearCanvas({
             x: x1, y: y1,
-            radius: 10
+            radius: radius
         });
-*/
-        var asin = 10*Math.sin(Math.atan((y2-y1)/(x2-x1)));
-        var acos = 10*Math.cos(Math.atan((y2-y1)/(x2-x1)))
+
+        var asin = radius*Math.sin(Math.atan((y2-y1)/(x2-x1)));
+        var acos = radius*Math.cos(Math.atan((y2-y1)/(x2-x1)))
         var x3 = x1+asin;
         var y3 = y1-acos;
         var x4 = x1-asin;
@@ -210,19 +219,22 @@
         var y5 = y2-acos;
         var x6 = x2-asin;
         var y6 = y2+acos;
-/*
+        
+        $("#xy1").val(x3 +":"+ y3);
+        $("#xy2").val(x4 +":"+ y4);
+
         $myCanvas.clearCanvas({
             x: x2, y: y2,
-            radius: 10
+            radius: radius
         });
-*/
-        $myCanvas.clearCanvas({
-            x3: 300, y3: 150,
-            x4: 350, y4: 150,
-            x5: 300, y5: 200,
-            x6: 350, y6: 200,
-            radius: 10
-        });
+        
+        if (x3 + y3 + x4 + y4 + x5 + y5 + x6 + y6 > 0)
+            $myCanvas.clearCanvas({
+                x3: x3, y3: y3,
+                x4: x4, y4: y4,
+                x5: x5, y5: y5,
+                x6: x6, y6: y6
+            });
     }
 
     function paintLine(x1, y1, x2, y2) {
@@ -239,31 +251,71 @@
         });
     }
 
-    //On mousedown the painting functionality kicks in
-    $myCanvas.on('mousedown', function(e) {
-        isMouseDown = true;
-    });
-
-    //On mouseup the painting functionality stops
-    $myCanvas.on('mouseup', function() {
-        isMouseDown = false;
-        return;
-    });
-
-    //On mousemove store the mouse coordinates and
-    //use jCanvas drawLine() method
-    $myCanvas.on('mousemove', function(e) {
-        lastPos.x = pos.x;
-        lastPos.y = pos.y;
-        pos.x = e.pageX - $offset.left;
-        pos.y = e.pageY - $offset.top;
-        if (isMouseDown) {
-            if (paintType === 'pen')
-                paintLine(lastPos.x, lastPos.y, pos.x, pos.y);
-            else if (paintType === 'eraser')
-                clearLine(lastPos.x, lastPos.y, pos.x, pos.y);
-        }
-    });
+    var hastouch = "ontouchstart" in window ? true : false;
+    if (hastouch) {
+        $myCanvas.on('touchstart', function(e) {
+            isMouseDown = true;
+            //$("#xy1").val(pos.x +":"+ pos.y);
+        });
+        
+        $myCanvas.on('touchend', function() {
+            isMouseDown = false;
+            lastPos.x = 0;
+            lastPos.y = 0;
+            pos.x = 0;
+            pos.y = 0;
+            
+            return;
+        });
+        
+        $myCanvas.on('mousemove', function(e) {
+            lastPos.x = pos.x;
+            lastPos.y = pos.y;
+            pos.x = e.pageX - $offset.left;
+            pos.y = e.pageY - $offset.top;
+            if (lastPos.x === 0 && lastPos.y === 0) {
+                lastPos.x = pos.x;
+                lastPos.y = pos.y;
+            }
+                        
+            if (isMouseDown) {
+            /*
+                $("#xy1").val("x1 = " + lastPos.x + ",y1 = " + lastPos.y);
+                $("#xy2").val("x2 = " + pos.x + ",y2 = " + pos.y);*/
+                if (paintType === 'pen')
+                    paintLine(lastPos.x, lastPos.y, pos.x, pos.y);
+                else if (paintType === 'eraser')
+                    clearLine(lastPos.x, lastPos.y, pos.x, pos.y);
+            }
+        });
+    } else {
+        //On mousedown the painting functionality kicks in
+        $myCanvas.on('mousedown', function(e) {
+            isMouseDown = true;
+        });
+        
+        //On mouseup the painting functionality stops
+        $myCanvas.on('mouseup', function() {
+            isMouseDown = false;
+            return;
+        });
+        
+        //On mousemove store the mouse coordinates and
+        //use jCanvas drawLine() method
+        $myCanvas.on('mousemove', function(e) {
+            lastPos.x = pos.x;
+            lastPos.y = pos.y;
+            pos.x = e.pageX - $offset.left;
+            pos.y = e.pageY - $offset.top;
+            if (isMouseDown) {
+                if (paintType === 'pen')
+                    paintLine(lastPos.x, lastPos.y, pos.x, pos.y);
+                else if (paintType === 'eraser')
+                    clearLine(lastPos.x, lastPos.y, pos.x, pos.y);
+            }
+        });
+    }
+    
 </script>
 <style>
 canvas {
