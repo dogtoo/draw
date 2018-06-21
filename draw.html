@@ -1,104 +1,129 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" type="text/css" href="css/easyui.css" />
+<link rel="stylesheet" type="text/css" href="css/exam.css" />
 <script type="text/javascript" src="js/jquery-1.12.4.js"></script>
 <script type="text/javascript" src="js/jcanvas.js"></script>
 <script type="text/javascript" src="js/jquery.easyui.min.js"></script>
 <script type="text/javascript" src="js/easyui-lang-zh_TW.js"></script>
-<style>
-    #P2{
-        position:absolute;
-        top:11px;
-        left:115px;
-    }
-</style>
+<script type="text/javascript">
+    $(function(){
+        $("#baseColor").combobox({
+            showItemIcon: true,
+            data: [
+                {value:'#FF0000',text:'red',selected:true},
+                {value:'#FFFF00',text:'yellow'},
+                {value:'#0000CD',text:'mediumblue'},
+                {value:'#000000',text:'black'}
+            ],
+            editable: false,
+            panelHeight: 'auto',
+            labelPosition: 'top',
+            formatter:function(row){
+                return '<div style="background-color:'+row.value+';width:30px;height:30px"></div><span class="item-text">'+row.text+'</span>';
+            },
+            onSelect: function(rec) {
+                var r = $(this).next().find("input.textbox-text")[0];
+                $(r).css("background-color",rec.value);
+                paintColor=rec.value;
+            }
+        });
+
+        $("#baseType").combobox({
+            showItemIcon: true,
+            data: [
+                {value:'mouse-pointer.png',text:'cursor',selected:true},
+                {value:'edit.png',text:'pen'},
+                {value:'eraser.png',text:'eraser'}
+            ],
+            editable: false,
+            panelHeight: 'auto',
+            labelPosition: 'top',
+            formatter:function(row){
+                var imageFile = 'css/images/' + row.value;
+                return '<img class="item-img" src="'+imageFile+'"/><span class="item-text">'+row.text+'</span>';
+            },
+            onSelect: function(rec) {
+                var r = $(this).next().find("input.textbox-text")[0];
+                var i = $(this).next().find("img")[0];
+                $(i).remove();
+                var imageFile = 'css/images/' + rec.value;
+                $(r).before('<img class="item-img" src="'+imageFile+'"/>');
+                paintType=rec.text;
+            }
+        });
+        $("#basePaintWidth").combobox({
+            showItemIcon: true,
+            data: [
+                {value:'3',text:'3',selected:true},
+                {value:'5',text:'5'},
+                {value:'6',text:'6'},
+                {value:'9',text:'9'},
+                {value:'11',text:'11'},
+                {value:'13',text:'13'},
+            ],
+            editable: false,
+            panelHeight: 'auto',
+            labelPosition: 'top',
+            formatter:function(row){
+                var c = "#000000";
+                return '<div style="background-color:'+c+';width:'+row.value+'px;height:'+row.value+'px;border-radius:999em;"></div><span class="item-text">'+row.text+'</span>';
+            },
+            onSelect: function(rec) {
+                var c = "#000000";
+                var r = $(this).next().find("input.textbox-text")[0];
+                var d = $(this).next().find("div")[0];
+                $(d).remove();
+                $(r).before('<div style="height:'+r.clientHeight+'px;width:'+r.clientHeight+'px;float:left;">'
+                          + '   <div style="margin: 0px auto;position: relative;transform:translateY('+((r.clientHeight-rec.value)/2-1)+'px);background-color:'+c+';width:'+rec.value+'px;height:'+rec.value+'px;border-radius:999em;"></div>'
+                          + '</div>');
+                paintWidth=rec.value;
+            }
+        });
+    });
+</script>
 </head>
 <body>
     <table>
         <tr>
-            <td width="100">
-                <table style="border:1px #cccccc solid;" cellpadding="1" border='1'>
-                    <tr>
-                        <td>
-                            <div id="red" style="background-color:#FF0000;width:30px;height:30px" onclick="paintColor=this.style.backgroundColor"></div>
-                        </td>
-                        <td>
-                            <div id="yellow" style="background-color:#FFFF00;width:30px;height:30px" onclick="paintColor=this.style.backgroundColor"></div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <div id="mediumblue" style="background-color:#0000CD;width:30px;height:30px" onclick="paintColor=this.style.backgroundColor"></div>
-                        </td>
-                        <td>
-                            <div id="black" style="background-color:#000000;width:30px;height:30px" onclick="paintColor=this.style.backgroundColor"></div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td colspan="2" align="center">
-                            <div id="circle3" style="width:60px;height:13px;" onclick="paintWidth=this.id.match(/\d+/)">
-                                <div style="background-color:#000000;width:3px;height:3px;border-radius:999em;"></div>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td colspan="2" align="center">
-                            <div id="circle6" style="width:60px;height:13px;" onclick="paintWidth=this.id.match(/\d+/)">
-                                <div style="background-color:#000000;width:6px;height:6px;border-radius:999em;"></div>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td colspan="2" align="center">
-                            <div id="circle9" style="width:60px;height:13px;" onclick="paintWidth=this.id.match(/\d+/)">
-                                <div style="background-color:#000000;width:9px;height:9px;border-radius:999em;"></div>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td colspan="2" align="center">
-                            <div>
-                                <img src="css/icons/mouse-pointer.png" onclick="paintType='cursor'"/>
-                            </div>
-                            <div>
-                                <img src="css/icons/edit.png" onclick="paintType='pen'"/>
-                            </div>
-                            <div>
-                                <img src="css/icons/eraser.png" onclick="paintType='eraser'"/>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td colspan="2" align="center">
-                            <button onclick="out()">輸出</button>
-                        </td>
-                    </tr>
-                    
-                    <tr>
-                        <td colspan="2" align="center">
-                            <input type="input" id="xy1" style="width:90px"/>
-                            <input type="input" id="xy2" style="width:90px"/>
-                        </td>
-                    </tr>
-                    
-                </table>
-            </td>
             <td>
-                <div id="P1">
-                    <canvas id="myCanvas2" width="800" height="400" style="border:1px solid #000000;"></canvas>
-
-                </div>
-                <div id="P2">
-                    <canvas id="myCanvas"  width="800" height="400"  style="border:1px solid #000000;"/>
+                <div id="canvasP0">
+                    <div id="P1">
+                        <canvas id="canvasP1"/>
+                    </div>
+                    <div id="P2">
+                        <canvas id="canvasP2"/>
+                    </div>
                 </div>
             </td>
         </tr>
-
+        <tr>
+            <td>
+                <div class="easyui-panel" style="padding:5px;">
+                    <input id="baseColor" class="easyui-combobox" style="width:80px;"/>
+                    <input id="baseType" class="easyui-combobox" style="width:80px;"/>
+                    <input id="basePaintWidth" class="easyui-combobox" style="width:80px;"/>
+                    <input type="input" id="xy1" style="width:90px"/>
+                    <input type="input" id="xy2" style="width:90px"/>
+                    <button onclick="out()">輸出</button>
+                </div>
+            </td>
+        </tr>
     </table>
 </body>
 </html>
 <script type="text/javascript">
-
+/* 這段是想把手機亂滑動鎖起來
+    var jinzhi=0;
+    document.body.addEventListener("touchmove",function(e){
+        if(jinzhi==0){
+            e.preventDefault();
+            //e.stopPropagation();
+            $("#xy1").val("preventDefault");
+        }
+    },false);
+*/
     var isMouseDown = false;
     var pos = {
         x: 0,
@@ -111,14 +136,55 @@
     var paintWidth = 3; //預設畫筆寬度
     var paintColor = '#FF0000'; //預設畫筆顏色
     var paintType = 'pen'; //預設游標 eraser pen
+    var canvasWidth = 800;
+    var canvasHeight = 350;
 
-    alert("P1 top = " + $("#P1").position().top + ", left = " + $("#P1").position().left);
-    var $myCanvas = $('#myCanvas');
-    var $myCanvas2 = $('#myCanvas2');
-    var $offset = $myCanvas.offset();
+    $("#canvasP0").css({'width': canvasWidth+4,
+                        'height': canvasHeight+4,
+                        'border': '3px #cccccc dashed'});
 
-    var itemDesc = "繼上週簽下新秀巴格利（Marvin Bagley III），彪馬（Puma）再次簽下19歲的美國大專男子錦標賽（NCAA）\n一級名校新秀艾頓（DeAndre Ayton）為彪馬代言，雙方同意4年合約，據悉金額上看台幣上億，近期推出2雙彪馬專屬籃球鞋。"
-    var iDescFontSize = 20;
+    //alert("P1 top = " + $("#P1").position().top + ", left = " + $("#P1").position().left);
+    var canvasP1 = {
+        top: 0,
+        left: 0
+    };
+    $.each($("#canvasP0").find("canvas"), function(key, canvasP) {
+        canvasP.width = canvasWidth;
+        canvasP.height = canvasHeight;
+        if (key === 0) {
+            canvasP1.top = $(canvasP).position().top;
+            canvasP1.left = $(canvasP).position().left;
+        } else {
+            $(canvasP).offset({top: canvasP1.top,
+                               left: canvasP1.left
+            });
+        }
+    });
+
+    //$("#P2").offset({top:$("#P1").position().top,left:$("#P1").position().left});
+
+    var $canvasP2 = $('#canvasP2');
+    var $canvasP1 = $('#canvasP1');
+    var $offset = $canvasP2.offset();
+
+    var itemDesc = "項目";
+    var itemValue = "繼上週簽下新秀巴格利（Marvin Bagley III），彪馬（Puma）再次簽下19歲的美國大專男子錦標賽（NCAA）\n一級名校新秀艾頓（DeAndre Ayton）為彪馬代言，雙方同意4年合約，據悉金額上看台幣上億，近期推出2雙彪馬專屬籃球鞋。"
+
+    var fontsize = 20;
+
+    //itemDesc長度
+    var iDescW = 400;
+
+    //表格基點
+    var baseX = 30;
+    var baseY = 30;
+    //表格高度
+    var baseH = 80;
+
+    //答案選項長度
+    var optW = 80;
+    var optCnt = 3; //級分數量
+
     //文字內距
     var wordPadding = {
         top: 10,
@@ -126,18 +192,6 @@
         bottom: 10,
         left: 10
     };
-    //itemDesc長度
-    var iDescW = 400;
-
-    //表格基點
-    var baseX = 30;
-    var baseY = 100;
-    //表格高度
-    var baseH = 80;
-
-    //答案選項長度
-    var optW = 80;
-    var optCnt = 3; //級分數量
 
     //文字畫點
     var wordPointX = 0;
@@ -156,27 +210,32 @@
             drawPointY += baseH + diffH;
 
         diffH = 0;
+        var iniText;
+        if (item === 0)
+            iniText = itemDesc;
+        else
+            iniText = itemValue;
 
         //項目文字
         var param = {
             fillStyle: '#000',
             strokeWidth: 1,
             x: drawPointX + wordPadding.top, y: drawPointY + wordPadding.left,
-            fontSize: iDescFontSize,
+            fontSize: fontsize,
             fontFamily: 'Trebuchet MS, sans-serif',
             maxWidth: iDescW - wordPadding.left - wordPadding.right,
             fromCenter: false,
             align: 'left',
-            text: itemDesc
+            text: iniText
         };
 
-        var iDescParams = $myCanvas2.measureText(param);
-        $myCanvas2.drawText(param);
+        var iDescParams = $canvasP1.measureText(param);
+        $canvasP1.drawText(param);
 
         if (iDescParams.height + wordPadding.top + wordPadding.bottom > baseH)
             diffH = iDescParams.height + wordPadding.top + wordPadding.bottom - baseH;
 
-        $myCanvas2.drawRect({
+        $canvasP1.drawRect({
             strokeStyle: 'black',
             strokeWidth: 1,
             x: drawPointX, y: drawPointY,
@@ -188,7 +247,7 @@
         drawPointX += iDescW;
         for (var cnt = 0; cnt < optCnt; cnt++)
         {
-            $myCanvas2.drawRect({
+            $canvasP1.drawRect({
                 strokeStyle: 'black',
                 strokeWidth: 1,
                 x: drawPointX, y: drawPointY,
@@ -204,7 +263,7 @@
     function clearLine(x1, y1, x2, y2) {
         var radius = paintWidth / 2;
 
-        $myCanvas.clearCanvas({
+        $canvasP2.clearCanvas({
             x: x1, y: y1,
             radius: radius
         });
@@ -219,17 +278,17 @@
         var y5 = y2-acos;
         var x6 = x2-asin;
         var y6 = y2+acos;
-        
+
         $("#xy1").val(x3 +":"+ y3);
         $("#xy2").val(x4 +":"+ y4);
 
-        $myCanvas.clearCanvas({
+        $canvasP2.clearCanvas({
             x: x2, y: y2,
             radius: radius
         });
-        
+
         if (x3 + y3 + x4 + y4 + x5 + y5 + x6 + y6 > 0)
-            $myCanvas.clearCanvas({
+            $canvasP2.clearCanvas({
                 x3: x3, y3: y3,
                 x4: x4, y4: y4,
                 x5: x5, y5: y5,
@@ -238,7 +297,7 @@
     }
 
     function paintLine(x1, y1, x2, y2) {
-        $myCanvas.drawLine({
+        $canvasP2.drawLine({
             strokeStyle: paintColor,
             strokeWidth: paintWidth,
             rounded: true,
@@ -253,56 +312,36 @@
 
     var hastouch = "ontouchstart" in window ? true : false;
     if (hastouch) {
-        $myCanvas.on('touchstart', function(e) {
+        $canvasP2.on('touchstart', function(e) {
             isMouseDown = true;
-            //$("#xy1").val(pos.x +":"+ pos.y);
         });
-        
-        $myCanvas.on('touchend', function() {
+
+        $canvasP2.on('touchend', function() {
             isMouseDown = false;
             lastPos.x = 0;
             lastPos.y = 0;
             pos.x = 0;
             pos.y = 0;
-            
+
             return;
         });
-        
-        $myCanvas.on('mousemove', function(e) {
-            lastPos.x = pos.x;
-            lastPos.y = pos.y;
-            pos.x = e.pageX - $offset.left;
-            pos.y = e.pageY - $offset.top;
-            if (lastPos.x === 0 && lastPos.y === 0) {
-                lastPos.x = pos.x;
-                lastPos.y = pos.y;
-            }
-                        
-            if (isMouseDown) {
-            /*
-                $("#xy1").val("x1 = " + lastPos.x + ",y1 = " + lastPos.y);
-                $("#xy2").val("x2 = " + pos.x + ",y2 = " + pos.y);*/
-                if (paintType === 'pen')
-                    paintLine(lastPos.x, lastPos.y, pos.x, pos.y);
-                else if (paintType === 'eraser')
-                    clearLine(lastPos.x, lastPos.y, pos.x, pos.y);
-            }
-        });
+
     } else {
         //On mousedown the painting functionality kicks in
-        $myCanvas.on('mousedown', function(e) {
+        $canvasP2.on('mousedown', function(e) {
             isMouseDown = true;
         });
-        
+
         //On mouseup the painting functionality stops
-        $myCanvas.on('mouseup', function() {
+        $canvasP2.on('mouseup', function() {
             isMouseDown = false;
             return;
         });
-        
+
         //On mousemove store the mouse coordinates and
         //use jCanvas drawLine() method
-        $myCanvas.on('mousemove', function(e) {
+        /*
+        $canvasP2.on('mousemove', function(e) {
             lastPos.x = pos.x;
             lastPos.y = pos.y;
             pos.x = e.pageX - $offset.left;
@@ -313,15 +352,43 @@
                 else if (paintType === 'eraser')
                     clearLine(lastPos.x, lastPos.y, pos.x, pos.y);
             }
-        });
+        });*/
     }
-    
+/*
+    $canvasP2.on('mouseout', function() {
+        isMouseDown = false;
+        lastPos.x = 0;
+        lastPos.y = 0;
+        pos.x = 0;
+        pos.y = 0;
+
+        return;
+    });
+*/
+    $canvasP2.on('mousemove', function(e) {
+
+        lastPos.x = pos.x;
+        lastPos.y = pos.y;
+        /*
+        $("#xy1").val("e.pageX = " + e.pageX);
+        $("#xy2").val("e.pagey = " + e.pageY);
+        */
+        pos.x = e.pageX - $offset.left;
+        pos.y = e.pageY - $offset.top;
+        if (lastPos.x === 0 && lastPos.y === 0) {
+            lastPos.x = pos.x;
+            lastPos.y = pos.y;
+        }
+
+        if (isMouseDown) {
+        /*
+            $("#xy1").val("x1 = " + lastPos.x + ",y1 = " + lastPos.y);
+            $("#xy2").val("x2 = " + pos.x + ",y2 = " + pos.y);*/
+            if (paintType === 'pen')
+                paintLine(lastPos.x, lastPos.y, pos.x, pos.y);
+            else if (paintType === 'eraser')
+                clearLine(lastPos.x, lastPos.y, pos.x, pos.y);
+        }
+    });
+
 </script>
-<style>
-canvas {
-    /**
-     * Set transparent to let any other canvases render through
-     */
-    background-color: transparent;
-}
-</style>
