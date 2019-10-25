@@ -1,0 +1,299 @@
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title></title>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.js"></script>
+    <script type="text/javascript">
+        var canvas;
+        var context;
+        var context_mouseArc;
+        var canvasWidth = 400;
+        var canvasHeight = 500;
+        var clickPointObject = new Object();
+        function reSetClickPointObject() {
+            clickPointObject = new Object();
+            clickPointObject.clickX = new Array();
+            clickPointObject.clickY = new Array();
+            clickPointObject.clickDrag = new Array();
+            clickPointObject.clickColor = new Array();
+            clickPointObject.clickSize = new Array();
+        }
+
+        var stepRecord = new Array();
+        var stepCnt = 0;
+        var paint;
+
+        var colorPurple = "#cb3594";
+        var colorGreen = "#659b41";
+        var colorYellow = "#ffcf33";
+        var colorBrown = "#986928";
+
+        var curColor = colorPurple;
+
+        var sizeHotspotWidthObject = new Object();
+        sizeHotspotWidthObject.huge = 39;
+        sizeHotspotWidthObject.large = 25;
+        sizeHotspotWidthObject.normal = 18;
+        sizeHotspotWidthObject.small = 16;
+        var curSize = "normal";
+
+        var mouseX_;
+        var mouseY_;
+
+        $(function(){
+
+            var canvasDiv = document.getElementById('canvasDiv');
+            canvas = document.createElement('canvas');
+            canvas.setAttribute('width', canvasWidth);
+            canvas.setAttribute('height', canvasHeight);
+            canvas.setAttribute('id', 'canvas');
+            canvasDiv.appendChild(canvas);
+            canvasDiv.style.border = "3px #cccccc dashed";
+            canvasDiv.style.width = canvasWidth;
+            canvasDiv.style.height = canvasHeight;
+            if(typeof G_vmlCanvasManager != 'undefined') {
+            	canvas = G_vmlCanvasManager.initElement(canvas);
+            }
+            context = canvas.getContext("2d");
+            context_mouseArc = canvas.getContext("2d");
+            context.clearRect(0, 0, context.canvas.width, context.canvas.height); // Clears the canvas
+            //context_mouseArc.clearRect(0, 0, context_mouseArc.canvas.width, context_mouseArc.canvas.height);
+            reSetClickPointObject();
+
+            function mouseUp() {
+                if (clickPointObject.clickX.length > 0) {
+                    stepRecord[stepCnt] = clickPointObject;
+                    stepCnt++;
+                }
+                reSetClickPointObject();
+                paint = false;
+            }
+
+            $('#canvas').mousedown(function(e){
+                var mouseX = e.pageX - this.offsetLeft;
+                var mouseY = e.pageY - this.offsetTop;
+
+                paint = true;
+                addClick(e.pageX - this.offsetLeft, e.pageY - this.offsetTop);
+                redraw();
+            });
+
+            $('#canvas').mousemove(function(e){
+                //context_mouseArc.clearRect(0, 0, context_mouseArc.canvas.width, context_mouseArc.canvas.height);
+                context_mouseArc.lineJoin = "round";
+                context_mouseArc.strokeStyle = 'black';
+
+                if (mouseX_ > 0) {
+                    context_mouseArc.lineWidth  = 3;
+                    context_mouseArc.beginPath();
+                    context_mouseArc.arc(mouseX_, mouseY_, 10, 0, 2 * Math.PI);
+                    context.globalCompositeOperation = "destination-out";
+                    context_mouseArc.stroke();
+                }
+
+                mouseX_ = e.pageX - this.offsetLeft;
+                mouseY_ = e.pageY - this.offsetTop;
+                context_mouseArc.lineWidth  = 1;
+                context_mouseArc.beginPath();
+                context_mouseArc.arc(e.pageX - this.offsetLeft, e.pageY - this.offsetTop, 10, 0, 2 * Math.PI);
+                context.globalCompositeOperation = "source-over";
+                context_mouseArc.stroke();
+
+                if(paint){
+                    $("#xy1").val(e.pageX - this.offsetLeft);
+                    $("#xy2").val(e.pageY - this.offsetTop);
+                    addClick(e.pageX - this.offsetLeft, e.pageY - this.offsetTop, true);
+                    redraw();
+                }
+            });
+
+            $('#canvas').mouseup(function(e){
+                mouseUp();
+            });
+
+            $('#canvas').mouseleave(function(e){
+                mouseUp();
+            });
+
+            // Add touch event listeners to canvas element
+        	canvas.addEventListener("touchstart", function(e)
+        	{
+        		// Mouse down location
+        		var mouseX = (e.changedTouches ? e.changedTouches[0].pageX : e.pageX) - this.offsetLeft,
+        			mouseY = (e.changedTouches ? e.changedTouches[0].pageY : e.pageY) - this.offsetTop;
+
+        		paint = true;
+        		addClick(mouseX, mouseY, false);
+        		redraw();
+        	}, false);
+
+        	canvas.addEventListener("touchmove", function(E)
+        	{
+        		var mouseX = (e.changedTouches ? e.changedTouches[0].pageX : e.pageX) - this.offsetLeft,
+        			mouseY = (e.changedTouches ? e.changedTouches[0].pageY : e.pageY) - this.offsetTop;
+
+        		if(paint){
+        			addClick(mouseX, mouseY, true);
+        			redraw();
+        		}
+        		e.preventDefault();
+        	}, false);
+
+        	canvas.addEventListener("touchend", function(e){
+        		mouseUp();
+        	}, false);
+
+        	canvas.addEventListener("touchcancel", function(e){
+        		mouseUp();
+        	}, false);
+
+        	$('#choosePurpleColors').mousedown(function(e){
+        		curColor = colorPurple;
+        	});
+        	$('#chooseGreenColors').mousedown(function(e){
+        		curColor = colorGreen;
+        	});
+        	$('#chooseYellowColors').mousedown(function(e){
+        		curColor = colorYellow;
+        	});
+        	$('#chooseBrownColors').mousedown(function(e){
+        		curColor = colorBrown;
+        	});
+        	$('#chooseEraserColors').mousedown(function(e){
+        		curColor = "eraser";
+        	});
+
+        	$('#chooseSmallSizes').mousedown(function(e){
+        		curSize = "small";
+        	});
+        	$('#chooseNormalSizes').mousedown(function(e){
+        		curSize = "normal";
+        	});
+        	$('#chooseLargeSizes').mousedown(function(e){
+        		curSize = "large";
+        	});
+        	$('#chooseHugeSizes').mousedown(function(e){
+        		curSize = "huge";
+        	});
+
+        	$('#chooseRestore').mousedown(function(e){
+        		returnStep();
+        	});
+
+        	$('#clearCanvas').mousedown(function(e)
+        	{
+        		reSetClickPointObject();
+        		clearCanvas();
+        	});
+
+        	$('#chooseSave').mousedown(function(E)
+        	{
+                context.save();
+        	});
+
+        	$('#chooseLoad').mousedown(function(E)
+        	{
+                context.restore();
+        	});
+        });
+
+        function clearCanvas()
+        {
+        	context.fillStyle = '#ffffff'; // Work around for Chrome
+        	context.fillRect(0, 0, canvasWidth, canvasHeight); // Fill in the canvas with white
+        	canvas.width = canvas.width; // clears the canvas
+        }
+
+        function returnStep()
+        {
+            stepCnt--;
+            clearCanvas();
+            for (s = 0; s < stepCnt; s++) {
+                reSetClickPointObject();
+                clickPointObject = stepRecord[s];
+                redraw();
+            }
+            reSetClickPointObject();
+        }
+
+        function addClick(x, y, dragging)
+        {
+            clickPointObject.clickX.push(x);
+            clickPointObject.clickY.push(y);
+            clickPointObject.clickDrag.push(dragging);
+            clickPointObject.clickColor.push(curColor);
+            clickPointObject.clickSize.push(curSize);
+        }
+
+        function redraw(){
+            context.lineJoin = "round";
+
+            var radius;
+            for(i=0; i < clickPointObject.clickX.length; i++) {
+
+                if(clickPointObject.clickSize[i] == "small"){
+        			radius = sizeHotspotWidthObject.small;
+        		}else if(clickPointObject.clickSize[i] == "normal"){
+        			radius = sizeHotspotWidthObject.normal;
+        		}else if(clickPointObject.clickSize[i] == "large"){
+        			radius = sizeHotspotWidthObject.large;
+        		}else if(clickPointObject.clickSize[i] == "huge"){
+        			radius = sizeHotspotWidthObject.huge;
+        		}else{
+        			radius = 0;
+        		}
+
+                context.beginPath();
+                if(clickPointObject.clickDrag[i] && i){
+                    context.moveTo(clickPointObject.clickX[i-1], clickPointObject.clickY[i-1]);
+                }else{
+                    context.moveTo(clickPointObject.clickX[i]-1, clickPointObject.clickY[i]);
+                }
+                context.lineTo(clickPointObject.clickX[i], clickPointObject.clickY[i]);
+                context.closePath();
+                if (clickPointObject.clickColor[i] == "eraser") {
+                    context.strokeStyle = 'black';
+                    context.globalCompositeOperation = "destination-out";
+                } else {
+                    context.strokeStyle = clickPointObject.clickColor[i];
+                    context.globalCompositeOperation = "source-over";
+                }
+                context.lineWidth = radius;
+                context.stroke();
+            }
+        }
+
+        function save(){
+            var draw = JSON.stringify(stepRecord);
+        }
+    </script>
+</head>
+<body>
+    <li>
+        <button id="clearCanvas" type="button">Clear</button>
+    </li>
+    <li>
+        <button id="choosePurpleColors" type="button">Purple</button>
+        <button id="chooseGreenColors" type="button">Green</button>
+        <button id="chooseYellowColors" type="button">Yellow</button>
+        <button id="chooseBrownColors" type="button">Brown</button>
+        <button id="chooseEraserColors" type="button">Eraser</button>
+    </li>
+    <li>
+        <button id="chooseSmallSizes" type="button">Small</button>
+        <button id="chooseNormalSizes" type="button">Normal</button>
+        <button id="chooseLargeSizes" type="button">Large</button>
+        <button id="chooseHugeSizes" type="button">Huge</button>
+    </li>
+    <li>
+        <button id="chooseRestore" type="button">Restore</button>
+    </li>
+    <li>
+        <button id="chooseSave" type="button">Save</button>
+        <button id="chooseLoad" type="button">Load</button>
+    </li>
+    <div id="canvasDiv"></div>
+    <input type="input" id="xy1" style="width:90px"/>
+    <input type="input" id="xy2" style="width:90px"/>
+</body>
+</html>

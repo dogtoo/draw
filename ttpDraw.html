@@ -124,6 +124,7 @@
         }
     },false);
 */
+/*
     var isMouseDown = false;
     var pos = {
         x: 0,
@@ -136,11 +137,15 @@
     var paintWidth = 3; //預設畫筆寬度
     var paintColor = '#FF0000'; //預設畫筆顏色
     var paintType = 'pen'; //預設游標 eraser pen
-    var canvasWidth = 800;
-    var canvasHeight = 350;
+*/
+    var canvasWidth = 1950;
+    var canvasHeight = 2000;
+    var scale = 50;//縮放百分比
+    var canvasW = canvasWidth * scale/100;
+    var canvasH = canvasHeight * scale/100;
 
-    $("#canvasP0").css({'width': canvasWidth+4,
-                        'height': canvasHeight+4,
+    $("#canvasP0").css({'width': canvasW+4,
+                        'height': canvasH+4,
                         'border': '3px #cccccc dashed'});
 
     //alert("P1 top = " + $("#P1").position().top + ", left = " + $("#P1").position().left);
@@ -149,8 +154,8 @@
         left: 0
     };
     $.each($("#canvasP0").find("canvas"), function(key, canvasP) {
-        canvasP.width = canvasWidth;
-        canvasP.height = canvasHeight;
+        canvasP.width = canvasW;
+        canvasP.height = canvasH;
         if (key === 0) {
             canvasP1.top = $(canvasP).position().top;
             canvasP1.left = $(canvasP).position().left;
@@ -163,8 +168,50 @@
 
     //$("#P2").offset({top:$("#P1").position().top,left:$("#P1").position().left});
 
-    var $canvasP2 = $('#canvasP2');
+    //var $canvasP2 = $('#canvasP2');
     var $canvasP1 = $('#canvasP1');
+
+    var x_line = 10;
+    var y_line = 10;
+    var paintWidth = 3; //預設畫筆寬度
+    var paintColor = '#FF0000'; //預設畫筆顏色
+
+    var x_w = x_line / canvasW;
+    var y_h = y_line / canvasH;
+
+    $canvasP1.drawLine({
+                strokeStyle: paintColor,
+                strokeWidth: paintWidth,
+                rounded: true,
+                strokeJoin: 'round',
+                strokeCap: 'round',
+                compositing: "destination-out",
+                x1: 0,
+                y1: 0,
+                x2: 100,
+                y2: 100
+            });
+
+    //x
+    for(var x_l = 0; x_l < x_line; x_l++)
+    {
+        var x1 = x_l * x_w;
+        var y1 = 0;
+        var x2 = x_l * x_w;
+        var y2 = canvasH;
+        $canvasP1.drawLine({
+                strokeStyle: paintColor,
+                strokeWidth: paintWidth,
+                rounded: true,
+                strokeJoin: 'round',
+                strokeCap: 'round',
+                compositing: "destination-out",
+                x1: x1,
+                y1: y1,
+                x2: x2,
+                y2: y2
+            });
+    }
 /*
     $canvasP2.addLayer({
         name: 'test',
@@ -179,8 +226,9 @@
       }
     });
 */
-    $canvasP2.removeLayer('test1');
+    //$canvasP2.removeLayer('test1');
 
+    /*
     $canvasP2.drawLine({
         layer: true,
         name: 'test1',
@@ -378,8 +426,9 @@
                 x6: x6, y6: y6
             });
         */
-    }
+    //}
 
+    /*
     function paintLine(x1, y1, x2, y2) {
         $canvasP2.drawLine({
             strokeStyle: paintColor,
@@ -437,7 +486,7 @@
                     clearLine(lastPos.x, lastPos.y, pos.x, pos.y);
             }
         });*/
-    }
+    //}
 /*
     $canvasP2.on('mouseout', function() {
         isMouseDown = false;
@@ -449,6 +498,7 @@
         return;
     });
 */
+/*
     $canvasP2.on('mousemove', function(e) {
 
         lastPos.x = pos.x;
@@ -457,6 +507,7 @@
         $("#xy1").val("e.pageX = " + e.pageX);
         $("#xy2").val("e.pagey = " + e.pageY);
         */
+/*
         pos.x = e.pageX - $offset.left;
         pos.y = e.pageY - $offset.top;
         if (lastPos.x === 0 && lastPos.y === 0) {
@@ -468,11 +519,12 @@
         /*
             $("#xy1").val("x1 = " + lastPos.x + ",y1 = " + lastPos.y);
             $("#xy2").val("x2 = " + pos.x + ",y2 = " + pos.y);*/
+/*
             if (paintType === 'pen')
                 paintLine(lastPos.x, lastPos.y, pos.x, pos.y);
             else if (paintType === 'eraser')
                 clearLine(lastPos.x, lastPos.y, pos.x, pos.y);
         }
     });
-
+*/
 </script>
