@@ -9,6 +9,7 @@
         var context_mouseArc;
         var canvasWidth = 400;
         var canvasHeight = 500;
+        var imgData;
         var clickPointObject = new Object();
         function reSetClickPointObject() {
             clickPointObject = new Object();
@@ -36,18 +37,25 @@
         sizeHotspotWidthObject.normal = 18;
         sizeHotspotWidthObject.small = 16;
         var curSize = "normal";
+        var r = 18;
 
         var mouseX_;
         var mouseY_;
 
         $(function(){
-
             var canvasDiv = document.getElementById('canvasDiv');
             canvas = document.createElement('canvas');
             canvas.setAttribute('width', canvasWidth);
             canvas.setAttribute('height', canvasHeight);
             canvas.setAttribute('id', 'canvas');
+            
+            canvasT = document.createElement('canvas');
+            canvasT.setAttribute('width', canvasWidth);
+            canvasT.setAttribute('height', canvasHeight);
+            canvasT.setAttribute('id', 'canvasT');
+            //canvasT.setAttribute('style', 'display:none');
             canvasDiv.appendChild(canvas);
+            canvasDiv.appendChild(canvasT);
             canvasDiv.style.border = "3px #cccccc dashed";
             canvasDiv.style.width = canvasWidth;
             canvasDiv.style.height = canvasHeight;
@@ -55,9 +63,11 @@
             	canvas = G_vmlCanvasManager.initElement(canvas);
             }
             context = canvas.getContext("2d");
-            context_mouseArc = canvas.getContext("2d");
             context.clearRect(0, 0, context.canvas.width, context.canvas.height); // Clears the canvas
-            //context_mouseArc.clearRect(0, 0, context_mouseArc.canvas.width, context_mouseArc.canvas.height);
+            
+            contextT = canvasT.getContext("2d");
+            contextT.clearRect(0, 0, contextT.canvas.width, contextT.canvas.height); // Clears the canvas
+            
             reSetClickPointObject();
 
             function mouseUp() {
@@ -67,6 +77,7 @@
                 }
                 reSetClickPointObject();
                 paint = false;
+                copy();
             }
 
             $('#canvas').mousedown(function(e){
@@ -75,36 +86,29 @@
 
                 paint = true;
                 addClick(e.pageX - this.offsetLeft, e.pageY - this.offsetTop);
-                redraw();
+                draw(context);
             });
 
             $('#canvas').mousemove(function(e){
-                //context_mouseArc.clearRect(0, 0, context_mouseArc.canvas.width, context_mouseArc.canvas.height);
-                context_mouseArc.lineJoin = "round";
-                context_mouseArc.strokeStyle = 'black';
 
-                if (mouseX_ > 0) {
-                    context_mouseArc.lineWidth  = 3;
-                    context_mouseArc.beginPath();
-                    context_mouseArc.arc(mouseX_, mouseY_, 10, 0, 2 * Math.PI);
-                    context.globalCompositeOperation = "destination-out";
-                    context_mouseArc.stroke();
+                if(!paint){
+                    redraw();
                 }
-
-                mouseX_ = e.pageX - this.offsetLeft;
-                mouseY_ = e.pageY - this.offsetTop;
-                context_mouseArc.lineWidth  = 1;
-                context_mouseArc.beginPath();
-                context_mouseArc.arc(e.pageX - this.offsetLeft, e.pageY - this.offsetTop, 10, 0, 2 * Math.PI);
-                context.globalCompositeOperation = "source-over";
-                context_mouseArc.stroke();
-
+                
                 if(paint){
                     $("#xy1").val(e.pageX - this.offsetLeft);
                     $("#xy2").val(e.pageY - this.offsetTop);
                     addClick(e.pageX - this.offsetLeft, e.pageY - this.offsetTop, true);
-                    redraw();
+                    draw(context);
                 }
+                
+                context.lineWidth  = 1;
+                context.beginPath();
+                context.strokeStyle = 'black';
+                
+                context.arc(e.pageX - this.offsetLeft, e.pageY - this.offsetTop, r/2-1, 0, 2 * Math.PI);
+                context.globalCompositeOperation = "source-over";
+                context.stroke(); 
             });
 
             $('#canvas').mouseup(function(e){
@@ -118,23 +122,23 @@
             // Add touch event listeners to canvas element
         	canvas.addEventListener("touchstart", function(e)
         	{
-        		// Mouse down location
+                // Mouse down location
         		var mouseX = (e.changedTouches ? e.changedTouches[0].pageX : e.pageX) - this.offsetLeft,
         			mouseY = (e.changedTouches ? e.changedTouches[0].pageY : e.pageY) - this.offsetTop;
 
         		paint = true;
         		addClick(mouseX, mouseY, false);
-        		redraw();
+        		draw(context);
         	}, false);
 
-        	canvas.addEventListener("touchmove", function(E)
+        	canvas.addEventListener("touchmove", function(e)
         	{
         		var mouseX = (e.changedTouches ? e.changedTouches[0].pageX : e.pageX) - this.offsetLeft,
         			mouseY = (e.changedTouches ? e.changedTouches[0].pageY : e.pageY) - this.offsetTop;
 
         		if(paint){
         			addClick(mouseX, mouseY, true);
-        			redraw();
+        			draw(context);
         		}
         		e.preventDefault();
         	}, false);
@@ -146,7 +150,7 @@
         	canvas.addEventListener("touchcancel", function(e){
         		mouseUp();
         	}, false);
-
+{
         	$('#choosePurpleColors').mousedown(function(e){
         		curColor = colorPurple;
         	});
@@ -165,15 +169,19 @@
 
         	$('#chooseSmallSizes').mousedown(function(e){
         		curSize = "small";
+       			r = sizeHotspotWidthObject.small;
         	});
         	$('#chooseNormalSizes').mousedown(function(e){
         		curSize = "normal";
+                r = sizeHotspotWidthObject.normal;
         	});
         	$('#chooseLargeSizes').mousedown(function(e){
         		curSize = "large";
+                r = sizeHotspotWidthObject.large;
         	});
         	$('#chooseHugeSizes').mousedown(function(e){
         		curSize = "huge";
+                r = sizeHotspotWidthObject.huge;
         	});
 
         	$('#chooseRestore').mousedown(function(e){
@@ -195,10 +203,12 @@
         	{
                 context.restore();
         	});
+}
         });
 
         function clearCanvas()
         {
+            context.clearRect(0, 0, context.canvas.width, context.canvas.height); 
         	context.fillStyle = '#ffffff'; // Work around for Chrome
         	context.fillRect(0, 0, canvasWidth, canvasHeight); // Fill in the canvas with white
         	canvas.width = canvas.width; // clears the canvas
@@ -211,8 +221,9 @@
             for (s = 0; s < stepCnt; s++) {
                 reSetClickPointObject();
                 clickPointObject = stepRecord[s];
-                redraw();
+                draw(context);
             }
+            copy();
             reSetClickPointObject();
         }
 
@@ -226,9 +237,35 @@
         }
 
         function redraw(){
-            context.lineJoin = "round";
+            clearCanvas();
+            /*
+            for (s = 0; s < stepCnt; s++) {
+                reSetClickPointObject();
+                clickPointObject = stepRecord[s];
+                draw(context);
+            }
+            reSetClickPointObject();
+            */
+            if (imgData)
+                context.putImageData(imgData,0,0);
+        }
+        
+        function copy() {
+            contextT.clearRect(0, 0, context.canvas.width, context.canvas.height); 
+            for (s = 0; s < stepCnt; s++) {
+                reSetClickPointObject();
+                clickPointObject = stepRecord[s];
+                draw(contextT);
+            }
+            reSetClickPointObject();
+            imgData=contextT.getImageData(0,0,context.canvas.width, context.canvas.height);
+        }
+        
+        function draw(ctx){
+            ctx.lineJoin = "round";
 
             var radius;
+            console.log('clickXLingth = ' + clickPointObject.clickX.length);
             for(i=0; i < clickPointObject.clickX.length; i++) {
 
                 if(clickPointObject.clickSize[i] == "small"){
@@ -242,24 +279,24 @@
         		}else{
         			radius = 0;
         		}
-
-                context.beginPath();
+                
+                ctx.beginPath();
                 if(clickPointObject.clickDrag[i] && i){
-                    context.moveTo(clickPointObject.clickX[i-1], clickPointObject.clickY[i-1]);
+                    ctx.moveTo(clickPointObject.clickX[i-1], clickPointObject.clickY[i-1]);
                 }else{
-                    context.moveTo(clickPointObject.clickX[i]-1, clickPointObject.clickY[i]);
+                    ctx.moveTo(clickPointObject.clickX[i]-1, clickPointObject.clickY[i]);
                 }
-                context.lineTo(clickPointObject.clickX[i], clickPointObject.clickY[i]);
-                context.closePath();
+                ctx.lineTo(clickPointObject.clickX[i], clickPointObject.clickY[i]);
+                ctx.closePath();
                 if (clickPointObject.clickColor[i] == "eraser") {
-                    context.strokeStyle = 'black';
-                    context.globalCompositeOperation = "destination-out";
+                    ctx.strokeStyle = 'black';
+                    ctx.globalCompositeOperation = "destination-out";
                 } else {
-                    context.strokeStyle = clickPointObject.clickColor[i];
-                    context.globalCompositeOperation = "source-over";
+                    ctx.strokeStyle = clickPointObject.clickColor[i];
+                    ctx.globalCompositeOperation = "source-over";
                 }
-                context.lineWidth = radius;
-                context.stroke();
+                ctx.lineWidth = radius;
+                ctx.stroke();
             }
         }
 
