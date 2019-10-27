@@ -2,13 +2,21 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title></title>
-    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.js"></script>
+    <script type="text/javascript" src="js/jquery-1.12.4.js"></script>
+    <script type="text/javascript" src="js/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="js/easyui-lang-zh_TW.js"></script>
+    
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <script type="text/javascript">
         var canvas;
         var context;
         var context_mouseArc;
-        var canvasWidth = 400;
-        var canvasHeight = 500;
+
+        var canvasWidth = 942;
+        var canvasHeight = 400;
         var imgData;
         var clickPointObject = new Object();
         function reSetClickPointObject() {
@@ -19,10 +27,11 @@
             clickPointObject.clickColor = new Array();
             clickPointObject.clickSize = new Array();
         }
-
+        
         var stepRecord = new Array();
         var stepCnt = 0;
         var paint;
+        var paintCnt = 0;
 
         var colorPurple = "#cb3594";
         var colorGreen = "#659b41";
@@ -43,6 +52,7 @@
         var mouseY_;
 
         $(function(){
+            var drawClass = $(".container-fluid").attr('class');
             var canvasDiv = document.getElementById('canvasDiv');
             canvas = document.createElement('canvas');
             canvas.setAttribute('width', canvasWidth);
@@ -53,7 +63,7 @@
             canvasT.setAttribute('width', canvasWidth);
             canvasT.setAttribute('height', canvasHeight);
             canvasT.setAttribute('id', 'canvasT');
-            //canvasT.setAttribute('style', 'display:none');
+            canvasT.setAttribute('style', 'display:none');
             canvasDiv.appendChild(canvas);
             canvasDiv.appendChild(canvasT);
             canvasDiv.style.border = "3px #cccccc dashed";
@@ -151,6 +161,11 @@
         		mouseUp();
         	}, false);
 {
+            $('.dropdown-menu a').click(function() {
+                $('#color').text($(this).text());
+                $('#color').val($(this).text());
+            });
+
         	$('#choosePurpleColors').mousedown(function(e){
         		curColor = colorPurple;
         	});
@@ -265,8 +280,11 @@
             ctx.lineJoin = "round";
 
             var radius;
-            console.log('clickXLingth = ' + clickPointObject.clickX.length);
-            for(i=0; i < clickPointObject.clickX.length; i++) {
+            //console.log('clickXLingth = ' + clickPointObject.clickX.length);
+            
+            if (!paint)
+                paintCnt = 0;
+            for(i=paintCnt-1; i < clickPointObject.clickX.length; i++) {
 
                 if(clickPointObject.clickSize[i] == "small"){
         			radius = sizeHotspotWidthObject.small;
@@ -298,6 +316,8 @@
                 ctx.lineWidth = radius;
                 ctx.stroke();
             }
+            if (paint)
+                paintCnt++;
         }
 
         function save(){
@@ -306,31 +326,44 @@
     </script>
 </head>
 <body>
-    <li>
-        <button id="clearCanvas" type="button">Clear</button>
-    </li>
-    <li>
-        <button id="choosePurpleColors" type="button">Purple</button>
-        <button id="chooseGreenColors" type="button">Green</button>
-        <button id="chooseYellowColors" type="button">Yellow</button>
-        <button id="chooseBrownColors" type="button">Brown</button>
-        <button id="chooseEraserColors" type="button">Eraser</button>
-    </li>
-    <li>
-        <button id="chooseSmallSizes" type="button">Small</button>
-        <button id="chooseNormalSizes" type="button">Normal</button>
-        <button id="chooseLargeSizes" type="button">Large</button>
-        <button id="chooseHugeSizes" type="button">Huge</button>
-    </li>
-    <li>
-        <button id="chooseRestore" type="button">Restore</button>
-    </li>
-    <li>
-        <button id="chooseSave" type="button">Save</button>
-        <button id="chooseLoad" type="button">Load</button>
-    </li>
-    <div id="canvasDiv"></div>
-    <input type="input" id="xy1" style="width:90px"/>
-    <input type="input" id="xy2" style="width:90px"/>
+    <div id="draw" class="container-fluid">
+        <li>
+            <button id="clearCanvas" type="button">Clear</button>
+        </li>
+        <button type="button" id="color" class="btn btn-secondary  dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            black
+        </button>
+        <div class="dropdown-menu">
+            <a class="dropdown-item" href="#">black</a>
+            <a class="dropdown-item" href="#">red</a>
+            <a class="dropdown-item" href="#">blue</a>
+            <a class="dropdown-item" href="#">yellow</a>
+        </div>
+        <!--
+        <li>
+            <button id="choosePurpleColors" type="button">Purple</button>
+            <button id="chooseGreenColors" type="button">Green</button>
+            <button id="chooseYellowColors" type="button">Yellow</button>
+            <button id="chooseBrownColors" type="button">Brown</button>
+            <button id="chooseEraserColors" type="button">Eraser</button>
+        </li>
+        -->
+        <li>
+            <button id="chooseSmallSizes" type="button">Small</button>
+            <button id="chooseNormalSizes" type="button">Normal</button>
+            <button id="chooseLargeSizes" type="button">Large</button>
+            <button id="chooseHugeSizes" type="button">Huge</button>
+        </li>
+        <li>
+            <button id="chooseRestore" type="button">Restore</button>
+        </li>
+        <li>
+            <button id="chooseSave" type="button" class="btn btn-primary">Save</button>
+            <button id="chooseLoad" type="button" class="btn btn-primary">Load</button>
+        </li>
+        <div id="canvasDiv"></div>
+        <input type="input" id="xy1" style="width:90px"/>
+        <input type="input" id="xy2" style="width:90px"/>
+    </div>
 </body>
 </html>
