@@ -5,7 +5,7 @@
     <script type="text/javascript" src="js/jquery-1.12.4.js"></script>
     <script type="text/javascript" src="js/jquery.easyui.min.js"></script>
     <script type="text/javascript" src="js/easyui-lang-zh_TW.js"></script>
-    
+
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
@@ -13,11 +13,11 @@
     <script type="text/javascript">
         var canvas;
         var context;
-        var context_mouseArc;
 
         var canvasWidth = 942;
         var canvasHeight = 400;
         var imgData;
+
         var clickPointObject = new Object();
         function reSetClickPointObject() {
             clickPointObject = new Object();
@@ -25,72 +25,67 @@
             clickPointObject.clickY = new Array();
             clickPointObject.clickDrag = new Array();
             clickPointObject.clickColor = new Array();
+            clickPointObject.clickCursor = new Array();
             clickPointObject.clickSize = new Array();
         }
-        
         var stepRecord = new Array();
         var stepCnt = 0;
+
         var paint;
         var paintCnt = 0;
 
-        var colorPurple = "#cb3594";
-        var colorGreen = "#659b41";
-        var colorYellow = "#ffcf33";
-        var colorBrown = "#986928";
+        var color = new Object();
+        color.Purple = "#cb3594";
+        color.Green = "#659b41";
+        color.Yellow = "#ffcf33";
+        color.Brown = "#986928";
+        color.Black = "#000000";
+        color.Red = "#FF0000";
+        color.Blue = "#0000FF";
+        var curColor = color.Black;
 
-        var curColor = colorPurple;
+        var curSize = 9;
+        var curEraserSize = 1.5;
 
-        var sizeHotspotWidthObject = new Object();
-        sizeHotspotWidthObject.huge = 39;
-        sizeHotspotWidthObject.large = 25;
-        sizeHotspotWidthObject.normal = 18;
-        sizeHotspotWidthObject.small = 16;
-        var curSize = "normal";
-        var r = 18;
-
-        var mouseX_;
-        var mouseY_;
+        var curType = "cursor";
 
         $(function(){
-            var drawClass = $(".container-fluid").attr('class');
-            var canvasDiv = document.getElementById('canvasDiv');
-            canvas = document.createElement('canvas');
-            canvas.setAttribute('width', canvasWidth);
-            canvas.setAttribute('height', canvasHeight);
-            canvas.setAttribute('id', 'canvas');
-            
-            canvasT = document.createElement('canvas');
-            canvasT.setAttribute('width', canvasWidth);
-            canvasT.setAttribute('height', canvasHeight);
-            canvasT.setAttribute('id', 'canvasT');
-            canvasT.setAttribute('style', 'display:none');
-            canvasDiv.appendChild(canvas);
-            canvasDiv.appendChild(canvasT);
-            canvasDiv.style.border = "3px #cccccc dashed";
-            canvasDiv.style.width = canvasWidth;
-            canvasDiv.style.height = canvasHeight;
-            if(typeof G_vmlCanvasManager != 'undefined') {
-            	canvas = G_vmlCanvasManager.initElement(canvas);
-            }
-            context = canvas.getContext("2d");
-            context.clearRect(0, 0, context.canvas.width, context.canvas.height); // Clears the canvas
-            
-            contextT = canvasT.getContext("2d");
-            contextT.clearRect(0, 0, contextT.canvas.width, contextT.canvas.height); // Clears the canvas
-            
-            reSetClickPointObject();
+            {
+                var drawClass = $(".container-fluid").attr('class');
+                var canvasDiv = document.getElementById('canvasDiv');
+                canvas = document.createElement('canvas');
+                canvas.setAttribute('width', canvasWidth);
+                canvas.setAttribute('height', canvasHeight);
+                canvas.setAttribute('id', 'canvas');
 
-            function mouseUp() {
-                if (clickPointObject.clickX.length > 0) {
-                    stepRecord[stepCnt] = clickPointObject;
-                    stepCnt++;
+                canvasT = document.createElement('canvas');
+                canvasT.setAttribute('width', canvasWidth);
+                canvasT.setAttribute('height', canvasHeight);
+                canvasT.setAttribute('id', 'canvasT');
+                canvasT.setAttribute('style', 'display:none');
+                canvasDiv.appendChild(canvas);
+                canvasDiv.appendChild(canvasT);
+                canvasDiv.style.border = "3px #cccccc dashed";
+                canvasDiv.style.width = canvasWidth;
+                canvasDiv.style.height = canvasHeight;
+                if(typeof G_vmlCanvasManager != 'undefined') {
+                	canvas = G_vmlCanvasManager.initElement(canvas);
                 }
+                context = canvas.getContext("2d");
+                context.clearRect(0, 0, context.canvas.width, context.canvas.height); // Clears the canvas
+
+                contextT = canvasT.getContext("2d");
+                contextT.clearRect(0, 0, contextT.canvas.width, contextT.canvas.height); // Clears the canvas
+
                 reSetClickPointObject();
-                paint = false;
-                copy();
+
+
             }
 
             $('#canvas').mousedown(function(e){
+                if (curType == "cursor")
+                    return;
+
                 var mouseX = e.pageX - this.offsetLeft;
                 var mouseY = e.pageY - this.offsetTop;
 
@@ -100,25 +95,27 @@
             });
 
             $('#canvas').mousemove(function(e){
+                if (curType == "cursor")
+                    return;
 
                 if(!paint){
                     redraw();
                 }
-                
+
                 if(paint){
                     $("#xy1").val(e.pageX - this.offsetLeft);
                     $("#xy2").val(e.pageY - this.offsetTop);
                     addClick(e.pageX - this.offsetLeft, e.pageY - this.offsetTop, true);
                     draw(context);
                 }
-                
+
                 context.lineWidth  = 1;
                 context.beginPath();
                 context.strokeStyle = 'black';
-                
-                context.arc(e.pageX - this.offsetLeft, e.pageY - this.offsetTop, r/2-1, 0, 2 * Math.PI);
+
+                context.arc(e.pageX - this.offsetLeft, e.pageY - this.offsetTop, curSize/2-1, 0, 2 * Math.PI);
                 context.globalCompositeOperation = "source-over";
-                context.stroke(); 
+                context.stroke();
             });
 
             $('#canvas').mouseup(function(e){
@@ -132,6 +129,9 @@
             // Add touch event listeners to canvas element
         	canvas.addEventListener("touchstart", function(e)
         	{
+        	    if (curType == "cursor")
+                    return;
+
                 // Mouse down location
         		var mouseX = (e.changedTouches ? e.changedTouches[0].pageX : e.pageX) - this.offsetLeft,
         			mouseY = (e.changedTouches ? e.changedTouches[0].pageY : e.pageY) - this.offsetTop;
@@ -143,6 +143,9 @@
 
         	canvas.addEventListener("touchmove", function(e)
         	{
+        	    if (curType == "cursor")
+                    return;
+
         		var mouseX = (e.changedTouches ? e.changedTouches[0].pageX : e.pageX) - this.offsetLeft,
         			mouseY = (e.changedTouches ? e.changedTouches[0].pageY : e.pageY) - this.offsetTop;
 
@@ -160,70 +163,73 @@
         	canvas.addEventListener("touchcancel", function(e){
         		mouseUp();
         	}, false);
-{
-            $('.dropdown-menu a').click(function() {
-                $('#color').text($(this).text());
-                $('#color').val($(this).text());
-            });
+            {
+                $('.color-dropdown a').click(function() {
+                    $('#color').html(this.innerHTML);
+                    $('#color').val(this.innerText.trim());
+                    curColor = color[this.innerText.trim()];
+                });
 
-        	$('#choosePurpleColors').mousedown(function(e){
-        		curColor = colorPurple;
-        	});
-        	$('#chooseGreenColors').mousedown(function(e){
-        		curColor = colorGreen;
-        	});
-        	$('#chooseYellowColors').mousedown(function(e){
-        		curColor = colorYellow;
-        	});
-        	$('#chooseBrownColors').mousedown(function(e){
-        		curColor = colorBrown;
-        	});
-        	$('#chooseEraserColors').mousedown(function(e){
-        		curColor = "eraser";
-        	});
+                $('.size-dropdown a').click(function() {
+                    $('#size').html(this.innerHTML);
+                    $('#size').val(this.innerText.trim());
+                    curSize = this.innerText.trim();
 
-        	$('#chooseSmallSizes').mousedown(function(e){
-        		curSize = "small";
-       			r = sizeHotspotWidthObject.small;
-        	});
-        	$('#chooseNormalSizes').mousedown(function(e){
-        		curSize = "normal";
-                r = sizeHotspotWidthObject.normal;
-        	});
-        	$('#chooseLargeSizes').mousedown(function(e){
-        		curSize = "large";
-                r = sizeHotspotWidthObject.large;
-        	});
-        	$('#chooseHugeSizes').mousedown(function(e){
-        		curSize = "huge";
-                r = sizeHotspotWidthObject.huge;
-        	});
+                    if (curType == "eraser")
+                        curSize = curSize * curEraserSize;
+                    else
+                        curSize = $('#size').val().trim();
+                });
 
-        	$('#chooseRestore').mousedown(function(e){
-        		returnStep();
-        	});
+                $('.type-dropdown a').click(function() {
+                    $('#type').html(this.innerHTML);
+                    $('#type').val(this.innerText.trim());
+                    curType = this.innerText.trim();
 
-        	$('#clearCanvas').mousedown(function(e)
-        	{
-        		reSetClickPointObject();
-        		clearCanvas();
-        	});
+                    if (curType == "eraser")
+                        curSize = curSize * curEraserSize;
+                    else
+                        curSize = $('#size').val().trim();
+                });
 
-        	$('#chooseSave').mousedown(function(E)
-        	{
-                context.save();
-        	});
+            	$('#restore').mousedown(function(e){
+            		returnStep();
+            	});
 
-        	$('#chooseLoad').mousedown(function(E)
-        	{
-                context.restore();
-        	});
-}
+            	$('#clearCanvas').mousedown(function(e)
+            	{
+            		reSetClickPointObject();
+            		clearCanvas();
+            		contextT.clearRect(0, 0, contextT.canvas.width, contextT.canvas.height); // Clears the canvas
+                    imgData = null;
+            	});
+
+            	$('#save').mousedown(function(E)
+            	{
+                    context.save();
+            	});
+            }
+            $('.color-dropdown .default').click();
+            $('.size-dropdown .default').click();
+            $('.type-dropdown .default').click();
         });
+
+        function mouseUp() {
+            if (curType == "cursor")
+                return;
+
+            if (clickPointObject.clickX.length > 0) {
+                stepRecord[stepCnt] = clickPointObject;
+                stepCnt++;
+            }
+            reSetClickPointObject();
+            paint = false;
+            copy();
+        }
 
         function clearCanvas()
         {
-            context.clearRect(0, 0, context.canvas.width, context.canvas.height); 
+            context.clearRect(0, 0, context.canvas.width, context.canvas.height);
         	context.fillStyle = '#ffffff'; // Work around for Chrome
         	context.fillRect(0, 0, canvasWidth, canvasHeight); // Fill in the canvas with white
         	canvas.width = canvas.width; // clears the canvas
@@ -248,25 +254,18 @@
             clickPointObject.clickY.push(y);
             clickPointObject.clickDrag.push(dragging);
             clickPointObject.clickColor.push(curColor);
+            clickPointObject.clickCursor.push(curType);
             clickPointObject.clickSize.push(curSize);
         }
 
         function redraw(){
             clearCanvas();
-            /*
-            for (s = 0; s < stepCnt; s++) {
-                reSetClickPointObject();
-                clickPointObject = stepRecord[s];
-                draw(context);
-            }
-            reSetClickPointObject();
-            */
             if (imgData)
                 context.putImageData(imgData,0,0);
         }
-        
+
         function copy() {
-            contextT.clearRect(0, 0, context.canvas.width, context.canvas.height); 
+            contextT.clearRect(0, 0, context.canvas.width, context.canvas.height);
             for (s = 0; s < stepCnt; s++) {
                 reSetClickPointObject();
                 clickPointObject = stepRecord[s];
@@ -275,29 +274,19 @@
             reSetClickPointObject();
             imgData=contextT.getImageData(0,0,context.canvas.width, context.canvas.height);
         }
-        
+
         function draw(ctx){
             ctx.lineJoin = "round";
 
             var radius;
-            //console.log('clickXLingth = ' + clickPointObject.clickX.length);
-            
+
             if (!paint)
                 paintCnt = 0;
-            for(i=paintCnt-1; i < clickPointObject.clickX.length; i++) {
 
-                if(clickPointObject.clickSize[i] == "small"){
-        			radius = sizeHotspotWidthObject.small;
-        		}else if(clickPointObject.clickSize[i] == "normal"){
-        			radius = sizeHotspotWidthObject.normal;
-        		}else if(clickPointObject.clickSize[i] == "large"){
-        			radius = sizeHotspotWidthObject.large;
-        		}else if(clickPointObject.clickSize[i] == "huge"){
-        			radius = sizeHotspotWidthObject.huge;
-        		}else{
-        			radius = 0;
-        		}
-                
+            console.log('paintCnt = ' + paintCnt);
+            for(i=paintCnt-1; i < clickPointObject.clickX.length; i++) {
+        		radius = clickPointObject.clickSize[i];
+
                 ctx.beginPath();
                 if(clickPointObject.clickDrag[i] && i){
                     ctx.moveTo(clickPointObject.clickX[i-1], clickPointObject.clickY[i-1]);
@@ -306,7 +295,7 @@
                 }
                 ctx.lineTo(clickPointObject.clickX[i], clickPointObject.clickY[i]);
                 ctx.closePath();
-                if (clickPointObject.clickColor[i] == "eraser") {
+                if (clickPointObject.clickCursor[i] == "eraser") {
                     ctx.strokeStyle = 'black';
                     ctx.globalCompositeOperation = "destination-out";
                 } else {
@@ -324,46 +313,106 @@
             var draw = JSON.stringify(stepRecord);
         }
     </script>
+    <style>
+        .btn-default {
+            color: #000;
+            background-color: #FFFFFF;
+            border-color: #000000;
+        }
+    </style>
 </head>
 <body>
     <div id="draw" class="container-fluid">
-        <li>
-            <button id="clearCanvas" type="button">Clear</button>
-        </li>
-        <button type="button" id="color" class="btn btn-secondary  dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            black
-        </button>
-        <div class="dropdown-menu">
-            <a class="dropdown-item" href="#">black</a>
-            <a class="dropdown-item" href="#">red</a>
-            <a class="dropdown-item" href="#">blue</a>
-            <a class="dropdown-item" href="#">yellow</a>
+        <button type="button" id="clearCanvas" class="btn btn-danger">Clear</button>
+        <div class="btn-group">
+            <button type="button" id="color" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            </button>
+            <div id="color-dropdown" class="color-dropdown dropdown-menu">
+                <a class="default dropdown-item" href="#">
+                    <div style="height:22px;width:22px;float:left;">
+                        <div style="margin: 0px auto;position: relative;background-color:#000000;width:22px;height:22px;"></div>
+                    </div>
+                    Black
+                </a>
+                <a class="dropdown-item" href="#">
+                    <div style="height:22px;width:22px;float:left;">
+                        <div style="margin: 0px auto;position: relative;background-color:#FF0000;width:22px;height:22px;"></div>
+                    </div>
+                    Red
+                </a>
+                <a class="dropdown-item" href="#">
+                    <div style="height:22px;width:22px;float:left;">
+                        <div style="margin: 0px auto;position: relative;background-color:#0000FF;width:22px;height:22px;"></div>
+                    </div>
+                    Blue
+                </a>
+                <a class="dropdown-item" href="#">
+                    <div style="height:22px;width:22px;float:left;">
+                        <div style="margin: 0px auto;position: relative;background-color:#ffcf33;width:22px;height:22px;"></div>
+                    </div>
+                    Yellow
+                </a>
+            </div>
         </div>
-        <!--
-        <li>
-            <button id="choosePurpleColors" type="button">Purple</button>
-            <button id="chooseGreenColors" type="button">Green</button>
-            <button id="chooseYellowColors" type="button">Yellow</button>
-            <button id="chooseBrownColors" type="button">Brown</button>
-            <button id="chooseEraserColors" type="button">Eraser</button>
-        </li>
-        -->
-        <li>
-            <button id="chooseSmallSizes" type="button">Small</button>
-            <button id="chooseNormalSizes" type="button">Normal</button>
-            <button id="chooseLargeSizes" type="button">Large</button>
-            <button id="chooseHugeSizes" type="button">Huge</button>
-        </li>
-        <li>
-            <button id="chooseRestore" type="button">Restore</button>
-        </li>
-        <li>
-            <button id="chooseSave" type="button" class="btn btn-primary">Save</button>
-            <button id="chooseLoad" type="button" class="btn btn-primary">Load</button>
-        </li>
+        <div class="btn-group">
+            <button type="button" id="size" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            </button>
+            <div id="size-dropdown" class="size-dropdown dropdown-menu">
+                <a class="dropdown-item" href="#">
+                    <div style="height:22px;width:22px;float:left;">
+                        <div style="margin: 0px auto;position: relative;transform:translateY(8.5px);background-color:#000000;width:3px;height:3px;border-radius:999em;"></div>
+                    </div>
+                    3
+                </a>
+                <a class="dropdown-item" href="#">
+                    <div style="height:22px;width:22px;float:left;">
+                        <div style="margin: 0px auto;position: relative;transform:translateY(8.5px);background-color:#000000;width:5px;height:5px;border-radius:999em;"></div>
+                    </div>
+                    5
+                </a>
+                <a class="dropdown-item" href="#">
+                    <div style="height:22px;width:22px;float:left;">
+                        <div style="margin: 0px auto;position: relative;transform:translateY(8.5px);background-color:#000000;width:6px;height:6px;border-radius:999em;"></div>
+                    </div>
+                    6
+                </a>
+                <a class="default dropdown-item" href="#">
+                    <div style="height:22px;width:22px;float:left;">
+                        <div style="margin: 0px auto;position: relative;transform:translateY(8.5px);background-color:#000000;width:9px;height:9px;border-radius:999em;"></div>
+                    </div>
+                    9
+                </a>
+                <a class="dropdown-item" href="#">
+                    <div style="height:22px;width:22px;float:left;">
+                        <div style="margin: 0px auto;position: relative;transform:translateY(8.5px);background-color:#000000;width:13px;height:13px;border-radius:999em;"></div>
+                    </div>
+                    13
+                </a>
+
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <button type="button" id="type" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            </button>
+            <div id="type-dropdown" class="type-dropdown dropdown-menu">
+                <a class="default dropdown-item" href="#">
+                    <img class="item-img" src="css/images/mouse-pointer.png">cursor
+                </a>
+                <a class="dropdown-item" href="#">
+                    <img class="item-img" src="css/images/edit.png">pen
+                </a>
+                <a class="dropdown-item" href="#">
+                    <img class="item-img" src="css/images/eraser.png">eraser
+                </a>
+            </div>
+        </div>
+
+        <button type="button" id="restore" class="btn btn-success">Restore</button>
+        <button type="button" id="save" class="btn btn-primary">Save</button>
         <div id="canvasDiv"></div>
-        <input type="input" id="xy1" style="width:90px"/>
-        <input type="input" id="xy2" style="width:90px"/>
+        <input type="input" id="xy1" style="width:90px;display:none"/>
+        <input type="input" id="xy2" style="width:90px;display:none"/>
     </div>
 </body>
 </html>
