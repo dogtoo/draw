@@ -14,19 +14,27 @@
         var canvas;
         var context;
 
-        var canvasWidth = 942;
-        var canvasHeight = 400;
+        var canvasWidth_ = 800;
+        var canvasHeight_ = 400;
+        var canvasWidth = canvasWidth_;
+        var canvasHeight = canvasHeight_;
         var imgData;
+        var rate = 100;
+
+        var p_x = 0;
+        var p_y = 0;
 
         var clickPointObject = new Object();
         function reSetClickPointObject() {
             clickPointObject = new Object();
-            clickPointObject.clickX = new Array();
-            clickPointObject.clickY = new Array();
-            clickPointObject.clickDrag = new Array();
-            clickPointObject.clickColor = new Array();
-            clickPointObject.clickCursor = new Array();
-            clickPointObject.clickSize = new Array();
+            clickPointObject.X = new Array();
+            clickPointObject.Y = new Array();
+            clickPointObject.Drag = new Array();
+            clickPointObject.Color = new Array();
+            clickPointObject.Cursor = new Array();
+            clickPointObject.Size = new Array();
+            clickPointObject.Theta = new Array();
+            clickPointObject.Rate = new Array();
         }
         var stepRecord = new Array();
         var stepCnt = 0;
@@ -45,7 +53,7 @@
         var curColor = color.Black;
 
         var curSize = 9;
-        var curEraserSize = 1.5;
+        var curEraserSize = 2;
 
         var curType = "cursor";
 
@@ -54,8 +62,8 @@
         function init() {
                 {
                     //console.log(window.innerHeight);
-                    canvasWidth = $(".modal-body").width();
-                    canvasHeight = window.innerHeight - window.innerHeight/100 * 20;
+                    //canvasWidth = $(".modal-body").width();
+                    //canvasHeight = window.innerHeight - window.innerHeight/100 * 20;
                     if (canvasHeight > 400)
                         canvasHeight = 400
                     //var drawClass = $(".container-fluid").attr('class');
@@ -87,8 +95,9 @@
                     reSetClickPointObject();
 
                     offset = $("#canvas").offset();
-                    offset.left = offset.left - 15;
-                    offset.top = offset.top - 15 + $("#drawModal").scrollTop();
+                    offset.left = offset.left;
+                    //offset.top = offset.top - 15 + $("#drawModal").scrollTop();
+                    offset.top = offset.top;
                 }
                 $('#canvas').mousedown(function(e){
                     if (curType == "cursor")
@@ -97,8 +106,6 @@
                     var mouseX = e.pageX - this.offsetLEft - offset.left;
                     var mouseY = e.pageY - this.offsetTop - offset.top;
 
-                reSetClickPointObject();
-            }
                     paint = true;
                     addClick(e.pageX - this.offsetLeft - offset.left, e.pageY - this.offsetTop - offset.top);
                     draw(context);
@@ -122,8 +129,10 @@
                     context.lineWidth  = 1;
                     context.beginPath();
                     context.strokeStyle = 'black';
-
-                    context.arc(e.pageX - this.offsetLeft - offset.left, e.pageY - this.offsetTop - offset.top, curSize/2-1, 0, 2 * Math.PI);
+                    if (curType == "eraser")
+                        context.arc(e.pageX - this.offsetLeft - offset.left, e.pageY - this.offsetTop - offset.top, ((curSize/2) - (1 * curEraserSize)) * rate/100, 0, 2 * Math.PI);
+                    else
+                        context.arc(e.pageX - this.offsetLeft - offset.left, e.pageY - this.offsetTop - offset.top, ((curSize/2) - 1) * rate/100, 0, 2 * Math.PI);
                     context.globalCompositeOperation = "source-over";
                     context.stroke();
                 });
@@ -212,19 +221,31 @@
                 		clearCanvas();
                 		contextT.clearRect(0, 0, contextT.canvas.width, contextT.canvas.height); // Clears the canvas
                         imgData = null;
+
+                        stepRecord = new Array();
+                        stepCnt = 0;
                 	});
 
                 	$('#save').mousedown(function(E)
                 	{
-                        context.save();
+                        save();
                 	});
+
+                	$('.rate-dropdown a').click(function() {
+                        $('#rate').html(this.innerHTML);
+                        $('#rate').val(this.innerText.trim());
+                        rate = this.innerText.trim();
+                        resize();
+                    });
                 }
                 $('.color-dropdown .default').click();
                 $('.size-dropdown .default').click();
                 $('.type-dropdown .default').click();
+                $('.rate-dropdown .default').click();
             }
 
         $(function(){
+            /*
             $("#drawModal").on('scroll', function() {
                 console.log('bef top = ' + offset.top);
                 offset = $("#canvas").offset();
@@ -234,37 +255,43 @@
                 redraw();
             });
 
-
             $("#drawModal").on('shown.bs.modal', function(e) {
                 if (!canvas)
                     init();
-            })
+            })*/
+
+            init();
 
             $(window).resize(function() {
-                canvasWidth = $(".modal-body").width();
-                canvasHeight = window.innerHeight - window.innerHeight/100 * 20;
-                if (canvasHeight > 400)
-                    canvasHeight = 400
-                canvas.width = canvasWidth;
-                canvas.height = canvasHeight;
-                canvasT.width = canvasWidth;
-                canvasT.height = canvasHeight;
-                canvasDiv.style.width = canvasWidth;
-                canvasDiv.style.height = canvasHeight;
-
-                offset = $("#canvas").offset();
-                offset.left = offset.left - 15;
-                offset.top = offset.top - 15 + $("#drawModal").scrollTop();
-
-                redraw();
+                resize();
             })
         });
+
+        function resize() {
+            canvasWidth = canvasWidth_ * rate/100;
+            canvasHeight = canvasHeight_ * rate/100;
+            //if (canvasHeight > 400)
+            //    canvasHeight = 400
+            canvas.width = canvasWidth;
+            canvas.height = canvasHeight;
+            canvasT.width = canvasWidth;
+            canvasT.height = canvasHeight;
+            canvasDiv.style.width = canvasWidth;
+            canvasDiv.style.height = canvasHeight;
+
+            offset = $("#canvas").offset();
+            offset.left = offset.left;
+            //offset.top = offset.top - 15 + $("#drawModal").scrollTop();
+            offset.top = offset.top;
+            copy();
+            redraw();
+        }
 
         function mouseUp() {
             if (curType == "cursor")
                 return;
 
-            if (clickPointObject.clickX.length > 0) {
+            if (clickPointObject.X.length > 0) {
                 stepRecord[stepCnt] = clickPointObject;
                 stepCnt++;
             }
@@ -296,12 +323,17 @@
 
         function addClick(x, y, dragging)
         {
-            clickPointObject.clickX.push(x);
-            clickPointObject.clickY.push(y);
-            clickPointObject.clickDrag.push(dragging);
-            clickPointObject.clickColor.push(curColor);
-            clickPointObject.clickCursor.push(curType);
-            clickPointObject.clickSize.push(curSize);
+            clickPointObject.X.push(x);
+            clickPointObject.Y.push(y);
+            clickPointObject.Drag.push(dragging);
+            clickPointObject.Color.push(curColor);
+            clickPointObject.Cursor.push(curType);
+            clickPointObject.Size.push(parseInt(curSize));
+            var theta;
+            theta = Math.atan2(y,x);
+            //console.log('X:'+x+', Y:'+y+', theta:' + theta + ', tanθ * X:' + (Math.tan(theta) * x));
+            clickPointObject.Theta.push(theta);
+            clickPointObject.Rate.push(parseInt(rate));
         }
 
         function redraw(){
@@ -309,8 +341,9 @@
             if (imgData)
                 context.putImageData(imgData,0,0);
         }
-
+var copy_m = false;
         function copy() {
+            copy_m = true;
             contextT.clearRect(0, 0, context.canvas.width, context.canvas.height);
             for (s = 0; s < stepCnt; s++) {
                 reSetClickPointObject();
@@ -319,6 +352,7 @@
             }
             reSetClickPointObject();
             imgData=contextT.getImageData(0,0,context.canvas.width, context.canvas.height);
+            copy_m = false;
         }
 
         function draw(ctx){
@@ -329,23 +363,47 @@
             if (!paint)
                 paintCnt = 0;
 
+            var lp = {'x':0,'y':0}, np = {'x':0,'y':0};
+            lp.x = 0;
+            lp.y = 0;
+
+            np.x = 0;
+            np.y = 0;
+
             //console.log('paintCnt = ' + paintCnt);
-            for(i=paintCnt-1; i < clickPointObject.clickX.length; i++) {
-        		radius = clickPointObject.clickSize[i];
+            for(i=paintCnt-1; i < clickPointObject.X.length; i++) {
+         		if (clickPointObject.Rate[i] != rate)
+        		    radius = clickPointObject.Size[i] * rate/100;
+        		else
+        		    radius = clickPointObject.Size[i] * clickPointObject.Rate[i]/100 ;
 
                 ctx.beginPath();
-                if(clickPointObject.clickDrag[i] && i){
-                    ctx.moveTo(clickPointObject.clickX[i-1], clickPointObject.clickY[i-1]);
+                if(clickPointObject.Drag[i] && i){
+                    lp.x = clickPointObject.X[i-1];
+                    lp.y = clickPointObject.Y[i-1];
                 }else{
-                    ctx.moveTo(clickPointObject.clickX[i]-1, clickPointObject.clickY[i]);
+                    lp.x = clickPointObject.X[i]-1;
+                    lp.y = clickPointObject.Y[i];
                 }
-                ctx.lineTo(clickPointObject.clickX[i], clickPointObject.clickY[i]);
+                np.x = clickPointObject.X[i];
+                np.y = clickPointObject.Y[i];
+
+                if (clickPointObject.Rate[i-1] != rate) {
+                    lp.x = lp.x * 100 / clickPointObject.Rate[i-1] * rate/100;
+                    lp.y = Math.tan(clickPointObject.Theta[i-1]) *  lp.x;
+
+                    np.x = np.x * 100 / clickPointObject.Rate[i] * rate/100;
+                    np.y = Math.tan(clickPointObject.Theta[i]) *  np.x;
+                }
+
+                ctx.moveTo(lp.x, lp.y);
+                ctx.lineTo(np.x, np.y);
                 ctx.closePath();
-                if (clickPointObject.clickCursor[i] == "eraser") {
+                if (clickPointObject.Cursor[i] == "eraser") {
                     ctx.strokeStyle = 'black';
                     ctx.globalCompositeOperation = "destination-out";
                 } else {
-                    ctx.strokeStyle = clickPointObject.clickColor[i];
+                    ctx.strokeStyle = clickPointObject.Color[i];
                     ctx.globalCompositeOperation = "source-over";
                 }
                 ctx.lineWidth = radius;
@@ -368,112 +426,112 @@
     </style>
 </head>
 <body>
-    <div class="modal fade bd-example-modal-xl" id="drawModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl">
-            <div class="modal-content">
-                <div class="modal-body">
-                    <div id="canvasDiv"></div>
-                </div>
+    <div id="canvasDiv"></div>
 
-                <div class="modal-header">
-                    <button type="button" id="clearCanvas" class="btn btn-danger">Clear</button>
-                    <div class="btn-group">
-                        <button type="button" id="color" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        </button>
-                        <div id="color-dropdown" class="color-dropdown dropdown-menu">
-                            <a class="default dropdown-item" href="#">
-                                <div style="height:22px;width:22px;float:left;">
-                                    <div style="margin: 0px auto;position: relative;background-color:#000000;width:22px;height:22px;"></div>
-                                </div>
-                                Black
-                            </a>
-                            <a class="dropdown-item" href="#">
-                                <div style="height:22px;width:22px;float:left;">
-                                    <div style="margin: 0px auto;position: relative;background-color:#FF0000;width:22px;height:22px;"></div>
-                                </div>
-                                Red
-                            </a>
-                            <a class="dropdown-item" href="#">
-                                <div style="height:22px;width:22px;float:left;">
-                                    <div style="margin: 0px auto;position: relative;background-color:#0000FF;width:22px;height:22px;"></div>
-                                </div>
-                                Blue
-                            </a>
-                            <a class="dropdown-item" href="#">
-                                <div style="height:22px;width:22px;float:left;">
-                                    <div style="margin: 0px auto;position: relative;background-color:#ffcf33;width:22px;height:22px;"></div>
-                                </div>
-                                Yellow
-                            </a>
-                        </div>
-                    </div>
-                    <div class="btn-group">
-                        <button type="button" id="size" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        </button>
-                        <div id="size-dropdown" class="size-dropdown dropdown-menu">
-                            <a class="dropdown-item" href="#">
-                                <div style="height:22px;width:22px;float:left;">
-                                    <div style="margin: 0px auto;position: relative;transform:translateY(8.5px);background-color:#000000;width:3px;height:3px;border-radius:999em;"></div>
-                                </div>
-                                3
-                            </a>
-                            <a class="dropdown-item" href="#">
-                                <div style="height:22px;width:22px;float:left;">
-                                    <div style="margin: 0px auto;position: relative;transform:translateY(8.5px);background-color:#000000;width:5px;height:5px;border-radius:999em;"></div>
-                                </div>
-                                5
-                            </a>
-                            <a class="dropdown-item" href="#">
-                                <div style="height:22px;width:22px;float:left;">
-                                    <div style="margin: 0px auto;position: relative;transform:translateY(8.5px);background-color:#000000;width:6px;height:6px;border-radius:999em;"></div>
-                                </div>
-                                6
-                            </a>
-                            <a class="default dropdown-item" href="#">
-                                <div style="height:22px;width:22px;float:left;">
-                                    <div style="margin: 0px auto;position: relative;transform:translateY(8.5px);background-color:#000000;width:9px;height:9px;border-radius:999em;"></div>
-                                </div>
-                                9
-                            </a>
-                            <a class="dropdown-item" href="#">
-                                <div style="height:22px;width:22px;float:left;">
-                                    <div style="margin: 0px auto;position: relative;transform:translateY(8.5px);background-color:#000000;width:13px;height:13px;border-radius:999em;"></div>
-                                </div>
-                                13
-                            </a>
-
-                        </div>
-                    </div>
-                    <div class="btn-group">
-                        <button type="button" id="type" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        </button>
-                        <div id="type-dropdown" class="type-dropdown dropdown-menu">
-                            <a class="dropdown-item" href="#">
-                                <img class="item-img" src="css/images/mouse-pointer.png">cursor
-                            </a>
-                            <a class="default dropdown-item" href="#">
-                                <img class="item-img" src="css/images/edit.png">pen
-                            </a>
-                            <a class="dropdown-item" href="#">
-                                <img class="item-img" src="css/images/eraser.png">eraser
-                            </a>
-                        </div>
-                    </div>
-                    <button type="button" id="restore" class="btn btn-success">Restore</button>
-                    <button type="button" id="save" class="btn btn-primary">Save</button>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                    <input type="input" id="xy1" style="width:90px;display:none"/>
-                    <input type="input" id="xy2" style="width:90px;display:none"/>
+    <button type="button" id="clearCanvas" class="btn btn-danger">Clear</button>
+    <div class="btn-group">
+        <button type="button" id="color" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        </button>
+        <div id="color-dropdown" class="color-dropdown dropdown-menu">
+            <a class="default dropdown-item" href="#">
+                <div style="height:22px;width:22px;float:left;">
+                    <div style="margin: 0px auto;position: relative;background-color:#000000;width:22px;height:22px;"></div>
                 </div>
-            </div>
+                Black
+            </a>
+            <a class="dropdown-item" href="#">
+                <div style="height:22px;width:22px;float:left;">
+                    <div style="margin: 0px auto;position: relative;background-color:#FF0000;width:22px;height:22px;"></div>
+                </div>
+                Red
+            </a>
+            <a class="dropdown-item" href="#">
+                <div style="height:22px;width:22px;float:left;">
+                    <div style="margin: 0px auto;position: relative;background-color:#0000FF;width:22px;height:22px;"></div>
+                </div>
+                Blue
+            </a>
+            <a class="dropdown-item" href="#">
+                <div style="height:22px;width:22px;float:left;">
+                    <div style="margin: 0px auto;position: relative;background-color:#ffcf33;width:22px;height:22px;"></div>
+                </div>
+                Yellow
+            </a>
         </div>
     </div>
-    <div id="draw" class="container-fluid">
-        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#drawModal">
-          Launch demo modal
+    <div class="btn-group">
+        <button type="button" id="size" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
         </button>
+        <div id="size-dropdown" class="size-dropdown dropdown-menu">
+            <a class="dropdown-item" href="#">
+                <div style="height:22px;width:22px;float:left;">
+                    <div style="margin: 0px auto;position: relative;transform:translateY(8.5px);background-color:#000000;width:3px;height:3px;border-radius:999em;"></div>
+                </div>
+                3
+            </a>
+            <a class="dropdown-item" href="#">
+                <div style="height:22px;width:22px;float:left;">
+                    <div style="margin: 0px auto;position: relative;transform:translateY(8.5px);background-color:#000000;width:5px;height:5px;border-radius:999em;"></div>
+                </div>
+                5
+            </a>
+            <a class="dropdown-item" href="#">
+                <div style="height:22px;width:22px;float:left;">
+                    <div style="margin: 0px auto;position: relative;transform:translateY(8.5px);background-color:#000000;width:6px;height:6px;border-radius:999em;"></div>
+                </div>
+                6
+            </a>
+            <a class="default dropdown-item" href="#">
+                <div style="height:22px;width:22px;float:left;">
+                    <div style="margin: 0px auto;position: relative;transform:translateY(8.5px);background-color:#000000;width:9px;height:9px;border-radius:999em;"></div>
+                </div>
+                9
+            </a>
+            <a class="dropdown-item" href="#">
+                <div style="height:22px;width:22px;float:left;">
+                    <div style="margin: 0px auto;position: relative;transform:translateY(8.5px);background-color:#000000;width:13px;height:13px;border-radius:999em;"></div>
+                </div>
+                13
+            </a>
+
+        </div>
+    </div>
+    <div class="btn-group">
+        <button type="button" id="type" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        </button>
+        <div id="type-dropdown" class="type-dropdown dropdown-menu">
+            <a class="dropdown-item" href="#">
+                <img class="item-img" src="css/images/mouse-pointer.png">cursor
+            </a>
+            <a class="default dropdown-item" href="#">
+                <img class="item-img" src="css/images/edit.png">pen
+            </a>
+            <a class="dropdown-item" href="#">
+                <img class="item-img" src="css/images/eraser.png">eraser
+            </a>
+        </div>
+    </div>
+    <button type="button" id="restore" class="btn btn-success">Restore</button>
+    <button type="button" id="save" class="btn btn-primary">Save</button>
+    <input type="input" id="xy1" style="width:90px;display:none"/>
+    <input type="input" id="xy2" style="width:90px;display:none"/>
+    <div class="btn-group">
+        <button type="button" id="rate" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        </button>
+        <div id="rate-dropdown" class="rate-dropdown dropdown-menu">
+            <a class="default dropdown-item" href="#">
+                100
+            </a>
+            <a class="dropdown-item" href="#">
+                90
+            </a>
+            <a class="dropdown-item" href="#">
+                80
+            </a>
+            <a class="dropdown-item" href="#">
+                70
+            </a>
+        </div>
     </div>
 </body>
 </html>
