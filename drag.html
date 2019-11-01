@@ -1,0 +1,58 @@
+<html>
+<head>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script type="text/javascript">
+
+    $(function() {
+        var canvas = document.getElementById("canvasElement");
+        //Draw some rectangles
+        var ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#000000";
+        ctx.fillRect(0, 0, 100, 100);
+        ctx.fillStyle = "#0000FF";
+        ctx.fillRect(50, 25, 520, 100);
+        ctx.fillStyle = "#FF0000";
+        ctx.fillRect(75, 76, 70, 100);
+        ctx.fillStyle = "#00FF00";
+        ctx.fillRect(100, 0, 67, 500);
+
+        //Create image element
+        var img = new Image();
+        //Flag
+        var isDragging = false;
+
+        //You should probably use addEventListener, onmousedown is used for simplicity
+        canvas.onmousedown = function(e) {
+            //Save original image
+            img.src = canvas.toDataURL();
+            isDragging = true;
+            ctx.fillStyle = "#000000";
+            //Draw your rectangle
+            ctx.fillRect(e.layerX, e.layerY, 10, 10);
+        };
+
+        canvas.onmousemove = function(e) {
+            if(!isDragging)
+                return;
+            //Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            //Draw original image
+            ctx.drawImage(img, 0, 0);
+            //Draw rectangle
+            ctx.fillStyle = "#000000";
+            ctx.fillRect(e.layerX, e.layerY, 10, 10);
+        }
+
+        canvas.onmouseup = function(e) {
+            isDragging = false;
+            //Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            //Draw original image
+            ctx.drawImage(img, 0, 0);
+        }
+    });
+
+</script>
+
+<canvas id="canvasElement" width="600" height="500"></canvas>
